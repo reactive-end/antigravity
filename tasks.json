@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "task_count": 1,
-  "updated_at": "2026-11-22T00:51:27.333421500Z",
+  "task_count": 2,
+  "updated_at": "2026-11-22T00:59:08.094909500Z",
   "tasks": [
     {
       "task_id": "T-20261122-01M80BH9P51EZEAG",
@@ -51,6 +51,45 @@
             "app/src/main/java/com/opensource/antigravity/webview/SessionManager.kt"
           ],
           "timestamp": "2026-11-22T00:51:27.333421500Z"
+        }
+      ]
+    },
+    {
+      "task_id": "T-20261122-01M80C75S5WFT8HF",
+      "request": "Simplificar Antigravity Android a pantalla completa oscura sin barra de ajustes ni simulacion de scroll",
+      "status": "done",
+      "created_by": "reactive-end",
+      "contributors": [
+        "reactive-end"
+      ],
+      "branches": [
+        "main"
+      ],
+      "files_touched": [],
+      "summary": "Eliminados FloatingControlDock, SettingsSheet y AppPreferences; tema oscuro unico fiel a Antigravity 2.0, scroll nativo automatico, APK recompilado y verificado en emulador sin errores",
+      "entry_count": 2,
+      "created_at": "2026-11-22T00:59:07.941903800Z",
+      "updated_at": "2026-11-22T00:59:08.094909500Z",
+      "entries": [
+        {
+          "entry_id": "01M80C75S7G4EZS590SMG3791H",
+          "task_id": "T-20261122-01M80C75S5WFT8HF",
+          "author": "reactive-end",
+          "status": "in_progress",
+          "branch": "main",
+          "summary": "Started task: Simplificar Antigravity Android a pantalla completa oscura sin barra de ajustes ni simulacion de scroll",
+          "files_touched": [],
+          "timestamp": "2026-11-22T00:59:07.975989600Z"
+        },
+        {
+          "entry_id": "01M80C75WXSWX4W5T1RBK471NY",
+          "task_id": "T-20261122-01M80C75S5WFT8HF",
+          "author": "reactive-end",
+          "status": "done",
+          "branch": "main",
+          "summary": "Eliminados FloatingControlDock, SettingsSheet y AppPreferences; tema oscuro unico fiel a Antigravity 2.0, scroll nativo automatico, APK recompilado y verificado en emulador sin errores",
+          "files_touched": [],
+          "timestamp": "2026-11-22T00:59:08.094909500Z"
         }
       ]
     }

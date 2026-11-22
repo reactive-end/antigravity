@@ -1,14 +1,14 @@
 # Antigravity (Android Remote Client)
 
-Cliente nativo Android (Kotlin + Jetpack Compose + Material 3) para controlar **Antigravity Remote** (`https://antigravity.google.com/remote`) con estética oscura/cósmica fiel a Antigravity, sesión persistente y notificaciones nativas.
+Cliente nativo Android (Kotlin + Jetpack Compose + Material 3) en modo pantalla completa oscura para controlar **Antigravity Remote** (`https://antigravity.google.com/remote`) sin barras de ajustes ni configuración manual.
 
 ## Características clave
 
-- **Sesión persistente real**: `CookieManager` con cookies de terceros habilitadas y `flush()` automático en `onPageFinished`, `onPause` y `onStop`, más `domStorageEnabled` y User-Agent compatible con Google Sign-In (sin bloqueo `403 disallowed_useragent`).
-- **Notificaciones nativas Android**: puente JS (`AntigravityNativeBridge`) que intercepta `window.Notification` y entrega notificaciones nativas limpias en el canal *Antigravity Remote* (silenciables en 1 toque).
-- **Ergonomía móvil + Edge-to-Edge**: ajuste automático con teclado (`adjustResize` + `imePadding`), viewport táctil optimizado, soporte de selector de archivos y manejo de popups OAuth dentro de la misma sesión.
-- **Control flotante minimalista y ajustes**: barra flotante colapsable (Atrás, Recargar, Inicio `/remote`, Ajustes) con indicador online/offline en vivo, modo escritorio opcional, mantener pantalla encendida, selector de tema (Oscuro/Claro/Sistema), limpiar caché sin cerrar sesión y cierre de sesión explícito.
-- **Calidad validada con `anvil v0.3.0`**: grafo Kotlin (`anvil-graph`), Tier 0 AST, compresor de Gradle (`anvil run`) y QA móvil (`anvil qa scan-mobile`).
+- **Estética oscura fiel a Antigravity**: lienzo `#000000`, superficies `#121318`, bordes `#232632` y acento `#4C8BF5`, sin barras flotantes ni selector de temas.
+- **Sesión persistente real**: `CookieManager` con cookies de terceros habilitadas y `flush()` automático en `onPageFinished`, `onPause` y `onStop`, `domStorageEnabled`, restauración de la última ruta visitada en `DataStore` y User-Agent compatible con Google Sign-In (sin bloqueo `403 disallowed_useragent`).
+- **Optimización móvil automática**: viewport táctil, ajuste automático con teclado (`adjustResize` + `imePadding`), scroll 100% nativo sin simulación, prevención de zoom involuntario al escribir, soporte de selector de archivos y popups OAuth dentro de la misma sesión.
+- **Notificaciones nativas Android**: puente JS (`AntigravityNativeBridge`) que intercepta `window.Notification` y entrega notificaciones nativas limpias en el canal *Antigravity Remote*.
+- **Reconexión automática**: detección de conectividad con `NetworkMonitor` y recarga automática al volver la conexión.
 
 ## Compilar APK
 

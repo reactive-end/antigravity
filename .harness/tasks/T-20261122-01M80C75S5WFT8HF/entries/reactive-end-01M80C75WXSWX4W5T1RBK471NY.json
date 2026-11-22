@@ -1,0 +1,10 @@
+{
+  "entry_id": "01M80C75WXSWX4W5T1RBK471NY",
+  "task_id": "T-20261122-01M80C75S5WFT8HF",
+  "author": "reactive-end",
+  "status": "done",
+  "branch": "main",
+  "summary": "Eliminados FloatingControlDock, SettingsSheet y AppPreferences; tema oscuro unico fiel a Antigravity 2.0, scroll nativo automatico, APK recompilado y verificado en emulador sin errores",
+  "files_touched": [],
+  "timestamp": "2026-11-22T00:59:08.094909500Z"
+}

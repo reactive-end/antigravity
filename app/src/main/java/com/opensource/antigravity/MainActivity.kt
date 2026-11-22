@@ -4,7 +4,6 @@ import android.Manifest
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.view.WindowManager
 import android.webkit.ValueCallback
 import android.webkit.WebView
 import androidx.activity.ComponentActivity
@@ -18,7 +17,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -31,19 +29,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import com.opensource.antigravity.data.AppPreferencesRepository
-import com.opensource.antigravity.data.AppSettings
 import com.opensource.antigravity.data.NetworkMonitor
+import com.opensource.antigravity.data.SessionStore
 import com.opensource.antigravity.notifications.NotificationHelper
 import com.opensource.antigravity.ui.components.CosmicProgressBar
 import com.opensource.antigravity.ui.components.ErrorStateView
-import com.opensource.antigravity.ui.components.FloatingControlDock
-import com.opensource.antigravity.ui.components.SettingsSheet
-import com.opensource.antigravity.ui.components.SettingsSheetActions
 import com.opensource.antigravity.ui.components.SplashOverlay
+import com.opensource.antigravity.ui.theme.AntigravityColors
 import com.opensource.antigravity.ui.theme.AntigravityTheme
-import com.opensource.antigravity.ui.theme.LocalAntigravityPalette
 import com.opensource.antigravity.webview.AntigravityJsBridge
 import com.opensource.antigravity.webview.AntigravityUrlPolicy
 import com.opensource.antigravity.webview.AntigravityWebView
@@ -54,7 +47,7 @@ import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
-    private lateinit var preferences: AppPreferencesRepository
+    private lateinit var sessionStore: SessionStore
     private lateinit var networkMonitor: NetworkMonitor
     private lateinit var notificationHelper: NotificationHelper
     private lateinit var jsBridge: AntigravityJsBridge
@@ -70,7 +63,7 @@ class MainActivity : ComponentActivity() {
 
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
-    ) { /* Permission state is queried dynamically on notify */ }
+    ) { /* Permission state checked dynamically when posting notifications */ }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,7 +72,7 @@ class MainActivity : ComponentActivity() {
             navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
         )
 
-        preferences = AppPreferencesRepository(applicationContext)
+        sessionStore = SessionStore(applicationContext)
         networkMonitor = NetworkMonitor(applicationContext)
         notificationHelper = NotificationHelper(applicationContext).apply { ensureChannel() }
         jsBridge = AntigravityJsBridge(notificationHelper)
@@ -87,26 +80,21 @@ class MainActivity : ComponentActivity() {
         requestNotificationPermissionIfNeeded()
 
         setContent {
-            val settings by preferences.settings.collectAsState(initial = AppSettings())
             val isOnline by networkMonitor.isOnline.collectAsState(
                 initial = networkMonitor.isCurrentlyOnline(),
             )
+            var initialUrl by remember { mutableStateOf<String?>(null) }
 
-            LaunchedEffect(settings.keepScreenOn) {
-                if (settings.keepScreenOn) {
-                    window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                } else {
-                    window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                }
+            LaunchedEffect(Unit) {
+                initialUrl = sessionStore.getLastVisitedUrl()
             }
 
-            AntigravityTheme(themeMode = settings.themeMode) {
+            AntigravityTheme {
                 AntigravityRemoteRoot(
-                    settings = settings,
+                    initialUrl = initialUrl,
                     isOnline = isOnline,
-                    preferences = preferences,
+                    sessionStore = sessionStore,
                     jsBridge = jsBridge,
-                    onRequestNotificationPermission = ::requestNotificationPermissionIfNeeded,
                     onLaunchFileChooser = { callback ->
                         pendingFileCallback?.onReceiveValue(emptyArray())
                         pendingFileCallback = callback
@@ -138,25 +126,21 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun AntigravityRemoteRoot(
-    settings: AppSettings,
+    initialUrl: String?,
     isOnline: Boolean,
-    preferences: AppPreferencesRepository,
+    sessionStore: SessionStore,
     jsBridge: AntigravityJsBridge,
-    onRequestNotificationPermission: () -> Unit,
     onLaunchFileChooser: (ValueCallback<Array<Uri>>) -> Unit,
 ) {
-    val palette = LocalAntigravityPalette.current
     val scope = rememberCoroutineScope()
-
     var webViewRef by remember { mutableStateOf<WebView?>(null) }
     var progress by remember { mutableIntStateOf(0) }
     var showSplash by remember { mutableStateOf(true) }
     var canGoBack by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    var showSettings by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        delay(2_600L)
+        delay(2_400L)
         showSplash = false
     }
 
@@ -174,35 +158,37 @@ private fun AntigravityRemoteRoot(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(palette.canvas)
+            .background(AntigravityColors.Canvas)
             .statusBarsPadding()
             .navigationBarsPadding()
             .imePadding(),
     ) {
-        AntigravityWebView(
-            settings = settings,
-            jsBridge = jsBridge,
-            callbacks = WebViewCallbacks(
-                onWebViewReady = { webViewRef = it },
-                onProgressChanged = { progress = it },
-                onNavigationStateChanged = { url, back ->
-                    canGoBack = back
-                    if (AntigravityUrlPolicy.isAntigravityWorkspaceUrl(url)) {
-                        scope.launch { preferences.setLastVisitedUrl(url) }
-                    }
-                },
-                onPageFirstPaint = {
-                    errorMessage = null
-                    showSplash = false
-                },
-                onMainFrameError = { desc ->
-                    showSplash = false
-                    errorMessage = desc
-                },
-                onFileChooser = onLaunchFileChooser,
-            ),
-            modifier = Modifier.fillMaxSize(),
-        )
+        if (initialUrl != null) {
+            AntigravityWebView(
+                initialUrl = initialUrl,
+                jsBridge = jsBridge,
+                callbacks = WebViewCallbacks(
+                    onWebViewReady = { webViewRef = it },
+                    onProgressChanged = { progress = it },
+                    onNavigationStateChanged = { url, back ->
+                        canGoBack = back
+                        if (AntigravityUrlPolicy.isAntigravityWorkspaceUrl(url)) {
+                            scope.launch { sessionStore.saveLastVisitedUrl(url) }
+                        }
+                    },
+                    onPageFirstPaint = {
+                        errorMessage = null
+                        showSplash = false
+                    },
+                    onMainFrameError = { desc ->
+                        showSplash = false
+                        errorMessage = desc
+                    },
+                    onFileChooser = onLaunchFileChooser,
+                ),
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
 
         CosmicProgressBar(
             progress = progress,
@@ -219,64 +205,6 @@ private fun AntigravityRemoteRoot(
             )
         }
 
-        FloatingControlDock(
-            isOnline = isOnline,
-            canGoBack = canGoBack,
-            onBack = { webViewRef?.goBack() },
-            onReload = {
-                errorMessage = null
-                webViewRef?.reload()
-            },
-            onHome = {
-                errorMessage = null
-                webViewRef?.loadUrl(AntigravityUrlPolicy.REMOTE_HOME_URL)
-            },
-            onOpenSettings = { showSettings = true },
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 8.dp, end = 10.dp),
-        )
-
         SplashOverlay(visible = showSplash)
-    }
-
-    if (showSettings) {
-        SettingsSheet(
-            settings = settings,
-            isOnline = isOnline,
-            actions = SettingsSheetActions(
-                onDismiss = { showSettings = false },
-                onToggleNotifications = { enabled ->
-                    if (enabled) onRequestNotificationPermission()
-                    scope.launch { preferences.setNotificationsEnabled(enabled) }
-                },
-                onToggleMobileOptimization = { enabled ->
-                    scope.launch { preferences.setMobileOptimization(enabled) }
-                },
-                onToggleDesktopMode = { enabled ->
-                    scope.launch { preferences.setDesktopMode(enabled) }
-                },
-                onToggleKeepScreenOn = { enabled ->
-                    scope.launch { preferences.setKeepScreenOn(enabled) }
-                },
-                onSelectTheme = { mode ->
-                    scope.launch { preferences.setThemeMode(mode) }
-                },
-                onClearCacheOnly = {
-                    webViewRef?.let(SessionManager::clearCachePreservingSession)
-                    showSettings = false
-                },
-                onSignOut = {
-                    webViewRef?.let { view ->
-                        SessionManager.signOut(view) {
-                            scope.launch {
-                                preferences.setLastVisitedUrl(AntigravityUrlPolicy.REMOTE_HOME_URL)
-                            }
-                        }
-                    }
-                    showSettings = false
-                },
-            ),
-        )
     }
 }

@@ -24,7 +24,7 @@ class AntigravityUrlPolicyTest {
     fun userAgentStripsWebViewTokenForGoogleSignIn() {
         val raw = "Mozilla/5.0 (Linux; Android 15; Pixel 8; wv) AppleWebKit/537.36 " +
             "(KHTML, like Gecko) Version/4.0 Chrome/134.0.0.0 Mobile Safari/537.36"
-        val clean = AntigravityUrlPolicy.sanitizeUserAgent(raw, desktopMode = false)
+        val clean = AntigravityUrlPolicy.sanitizeUserAgent(raw)
         assertFalse(clean.contains("; wv"))
         assertFalse(clean.contains("Version/4.0"))
         assertTrue(clean.contains("Chrome/134.0.0.0"))

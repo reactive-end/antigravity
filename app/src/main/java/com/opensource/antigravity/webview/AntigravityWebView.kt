@@ -1,5 +1,6 @@
 package com.opensource.antigravity.webview
 
+import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
@@ -18,7 +19,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
-import com.opensource.antigravity.data.AppSettings
 
 data class WebViewCallbacks(
     val onWebViewReady: (WebView) -> Unit,
@@ -31,24 +31,18 @@ data class WebViewCallbacks(
 
 @Composable
 fun AntigravityWebView(
-    settings: AppSettings,
+    initialUrl: String,
     jsBridge: AntigravityJsBridge,
     callbacks: WebViewCallbacks,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    val initialUrl = remember {
-        settings.lastVisitedUrl.takeIf { AntigravityUrlPolicy.isAntigravityWorkspaceUrl(it) }
-            ?: AntigravityUrlPolicy.REMOTE_HOME_URL
-    }
-
     val webView = remember {
         createConfiguredWebView(
             context = context,
-            initialSettings = settings,
+            initialUrl = initialUrl,
             jsBridge = jsBridge,
             callbacks = callbacks,
-            initialUrl = initialUrl,
         )
     }
 
@@ -63,19 +57,14 @@ fun AntigravityWebView(
     AndroidView(
         modifier = modifier,
         factory = { webView },
-        update = { view ->
-            jsBridge.setNotificationsEnabled(settings.notificationsEnabled)
-            applyDynamicSettings(view, settings)
-        },
     )
 }
 
 private fun createConfiguredWebView(
-    context: android.content.Context,
-    initialSettings: AppSettings,
+    context: Context,
+    initialUrl: String,
     jsBridge: AntigravityJsBridge,
     callbacks: WebViewCallbacks,
-    initialUrl: String,
 ): WebView {
     return WebView(context).apply {
         layoutParams = ViewGroup.LayoutParams(
@@ -83,7 +72,6 @@ private fun createConfiguredWebView(
             ViewGroup.LayoutParams.MATCH_PARENT,
         )
         setBackgroundColor(Color.BLACK)
-        overScrollMode = WebView.OVER_SCROLL_NEVER
 
         SessionManager.configurePersistentCookies(this)
 
@@ -96,100 +84,74 @@ private fun createConfiguredWebView(
             loadWithOverviewMode = true
             builtInZoomControls = false
             displayZoomControls = false
-            setSupportZoom(initialSettings.desktopMode)
+            setSupportZoom(false)
             javaScriptCanOpenWindowsAutomatically = true
             setSupportMultipleWindows(true)
             mediaPlaybackRequiresUserGesture = false
             mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
-            userAgentString = AntigravityUrlPolicy.sanitizeUserAgent(
-                defaultUserAgent = userAgentString,
-                desktopMode = initialSettings.desktopMode,
-            )
+            userAgentString = AntigravityUrlPolicy.sanitizeUserAgent(userAgentString)
         }
 
         addJavascriptInterface(jsBridge, AntigravityJsBridge.BRIDGE_NAME)
 
-        webViewClient = buildWebViewClient(initialSettings, callbacks)
+        webViewClient = buildWebViewClient(callbacks)
         webChromeClient = buildWebChromeClient(context, callbacks)
 
         loadUrl(initialUrl)
     }
 }
 
-private fun applyDynamicSettings(webView: WebView, appSettings: AppSettings) {
-    val targetUa = AntigravityUrlPolicy.sanitizeUserAgent(
-        defaultUserAgent = WebSettings.getDefaultUserAgent(webView.context),
-        desktopMode = appSettings.desktopMode,
-    )
-    if (webView.settings.userAgentString != targetUa) {
-        webView.settings.userAgentString = targetUa
-        webView.settings.setSupportZoom(appSettings.desktopMode)
-        webView.reload()
-    }
-    val script = MobileBridgeScript.build(
-        mobileOptimization = appSettings.mobileOptimization && !appSettings.desktopMode,
-        notificationsEnabled = appSettings.notificationsEnabled,
-    )
-    webView.evaluateJavascript(script, null)
-}
+private fun buildWebViewClient(callbacks: WebViewCallbacks): WebViewClient =
+    object : WebViewClient() {
 
-private fun buildWebViewClient(
-    settingsSnapshot: AppSettings,
-    callbacks: WebViewCallbacks,
-): WebViewClient = object : WebViewClient() {
-
-    override fun shouldOverrideUrlLoading(
-        view: WebView,
-        request: WebResourceRequest,
-    ): Boolean {
-        val url = request.url.toString()
-        if (AntigravityUrlPolicy.shouldLoadInApp(url)) {
-            return false
-        }
-        runCatching {
-            val intent = Intent(Intent.ACTION_VIEW, request.url).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        override fun shouldOverrideUrlLoading(
+            view: WebView,
+            request: WebResourceRequest,
+        ): Boolean {
+            val url = request.url.toString()
+            if (AntigravityUrlPolicy.shouldLoadInApp(url)) {
+                return false
             }
-            view.context.startActivity(intent)
+            runCatching {
+                val intent = Intent(Intent.ACTION_VIEW, request.url).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                view.context.startActivity(intent)
+            }
+            return true
         }
-        return true
-    }
 
-    override fun onPageCommitVisible(view: WebView, url: String) {
-        super.onPageCommitVisible(view, url)
-        callbacks.onPageFirstPaint()
-    }
+        override fun onPageCommitVisible(view: WebView, url: String) {
+            super.onPageCommitVisible(view, url)
+            callbacks.onPageFirstPaint()
+        }
 
-    override fun onPageFinished(view: WebView, url: String) {
-        super.onPageFinished(view, url)
-        SessionManager.flush()
-        callbacks.onPageFirstPaint()
-        callbacks.onNavigationStateChanged(url, view.canGoBack())
-        if (AntigravityUrlPolicy.isAntigravityWorkspaceUrl(url)) {
-            val script = MobileBridgeScript.build(
-                mobileOptimization = settingsSnapshot.mobileOptimization && !settingsSnapshot.desktopMode,
-                notificationsEnabled = settingsSnapshot.notificationsEnabled,
-            )
-            view.evaluateJavascript(script, null)
+        override fun onPageFinished(view: WebView, url: String) {
+            super.onPageFinished(view, url)
+            SessionManager.flush()
+            callbacks.onPageFirstPaint()
+            callbacks.onNavigationStateChanged(url, view.canGoBack())
+            if (AntigravityUrlPolicy.isAntigravityWorkspaceUrl(url)) {
+                view.evaluateJavascript(MobileBridgeScript.INJECT_SCRIPT, null)
+            }
+        }
+
+        override fun onReceivedError(
+            view: WebView,
+            request: WebResourceRequest,
+            error: WebResourceError,
+        ) {
+            super.onReceivedError(view, request, error)
+            if (request.isForMainFrame) {
+                val desc = error.description?.toString()?.takeIf { it.isNotBlank() }
+                    ?: "No se pudo conectar con Antigravity Remote."
+                callbacks.onMainFrameError(desc)
+            }
         }
     }
-
-    override fun onReceivedError(
-        view: WebView,
-        request: WebResourceRequest,
-        error: WebResourceError,
-    ) {
-        super.onReceivedError(view, request, error)
-        if (request.isForMainFrame) {
-            val desc = error.description?.toString()?.takeIf { it.isNotBlank() }
-                ?: "No se pudo conectar con Antigravity Remote."
-            callbacks.onMainFrameError(desc)
-        }
-    }
-}
 
 private fun buildWebChromeClient(
-    context: android.content.Context,
+    context: Context,
     callbacks: WebViewCallbacks,
 ): WebChromeClient = object : WebChromeClient() {
 
