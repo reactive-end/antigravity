@@ -1,0 +1,10 @@
+{
+  "entry_id": "01M80FZQWMYG1A6KNJNBP4D560",
+  "task_id": "T-20261122-01M80FZQWJ8MVYCQ",
+  "author": "reactive-end",
+  "status": "in_progress",
+  "branch": "main",
+  "summary": "Started task: Evitar desconexion del tunel remoto al salir de la app bloqueando visibilitychange y sosteniendo WakeLock/WifiLock",
+  "files_touched": [],
+  "timestamp": "2026-11-22T02:04:58.677535900Z"
+}

@@ -39,8 +39,32 @@ object MobileBridgeScript {
               window.__AGY_BG = false;
               var baselineSig = '';
               var prevTickSig = '';
+              var wasBusyInBg = false;
               var hasChangedInBg = false;
               var lastSnippet = '';
+
+              // CRITICAL: Never let Antigravity Remote know the tab went to background,
+              // otherwise its JS client disconnects from the remote PC instance!
+              try {
+                Object.defineProperty(document, 'hidden', { configurable: true, get: function() { return false; } });
+                Object.defineProperty(document, 'visibilityState', { configurable: true, get: function() { return 'visible'; } });
+                Object.defineProperty(document, 'webkitHidden', { configurable: true, get: function() { return false; } });
+                document.hasFocus = function() { return true; };
+
+                var blockedEvents = { visibilitychange: true, webkitvisibilitychange: true, pagehide: true, freeze: true, blur: true };
+                var origDocAdd = document.addEventListener.bind(document);
+                document.addEventListener = function(type, listener, options) {
+                  if (blockedEvents[String(type).toLowerCase()]) return;
+                  return origDocAdd(type, listener, options);
+                };
+                var origWinAdd = window.addEventListener.bind(window);
+                window.addEventListener = function(type, listener, options) {
+                  if (blockedEvents[String(type).toLowerCase()]) return;
+                  return origWinAdd(type, listener, options);
+                };
+                window.addEventListener('visibilitychange', function(e) { e.stopImmediatePropagation(); }, true);
+                document.addEventListener('visibilitychange', function(e) { e.stopImmediatePropagation(); }, true);
+              } catch (_) {}
 
               var emitNative = function(title, body) {
                 try {
@@ -55,6 +79,7 @@ object MobileBridgeScript {
               var NativeNotification = function(title, options) {
                 var body = (options && options.body) ? String(options.body) : '';
                 hasChangedInBg = false;
+                wasBusyInBg = false;
                 emitNative(title, body);
               };
               NativeNotification.prototype.close = function() {};
@@ -72,6 +97,7 @@ object MobileBridgeScript {
                 window.ServiceWorkerRegistration.prototype.showNotification = function(title, options) {
                   var body = (options && options.body) ? String(options.body) : '';
                   hasChangedInBg = false;
+                  wasBusyInBg = false;
                   emitNative(title, body);
                   return Promise.resolve();
                 };
@@ -88,41 +114,55 @@ object MobileBridgeScript {
                 };
               }
 
-              // Helper: detect if an agent turn is currently streaming/running
-              var isAgentBusy = function() {
-                try {
-                  var btns = document.querySelectorAll('button, [role="button"]');
-                  for (var i = 0; i < btns.length; i++) {
-                    var b = btns[i];
-                    if (b.disabled) continue;
-                    var label = ((b.getAttribute('aria-label') || '') + ' ' + (b.getAttribute('title') || '') + ' ' + (b.textContent || '')).toLowerCase();
-                    if (label.indexOf('stop') !== -1 || label.indexOf('detener') !== -1 || label.indexOf('cancel generating') !== -1) {
-                      return true;
-                    }
-                  }
-                } catch (_) {}
-                return false;
-              };
-
-              // Helper: compute a clean signature and preview of the latest conversation text
+              // Helper: detect if the agent is currently working ("Working" label or red stop button)
               var readConversationState = function() {
                 try {
                   var raw = (document.body && document.body.innerText) ? document.body.innerText : '';
                   var lines = raw.split('\n');
                   var cleanLines = [];
+                  var sawWorkingLine = false;
+                  var lostConnection = raw.indexOf('Lost connection to the remote instance') !== -1;
+
                   for (var i = 0; i < lines.length; i++) {
                     var ln = lines[i].trim();
-                    if (ln.length < 3) continue;
-                    if (/^\d{1,2}:\d{2}/.test(ln) || /^\d+s$/.test(ln)) continue;
-                    cleanLines.push(ln);
+                    if (!ln) continue;
+                    if (ln === 'Working' || ln === 'Thinking' || ln === 'Thinking...' || ln === 'Working...') {
+                      sawWorkingLine = true;
+                      continue;
+                    }
+                    if (ln.indexOf('Lost connection to the remote instance') !== -1 ||
+                        ln.indexOf('Please wait a minute or refresh') !== -1 ||
+                        ln.indexOf('Ask anything, @ to mention') !== -1) {
+                      continue;
+                    }
+                    if (/^\d{1,2}:\d{2}/.test(ln) || /^\d+[smh]\s+ago$/i.test(ln) || ln === 'now') continue;
+                    if (ln.length >= 2) cleanLines.push(ln);
                   }
-                  var tail = cleanLines.slice(-12);
-                  var sig = cleanLines.length + ':' + tail.join('|').replace(/\d+\s*(s|ms|sec|min)\b/gi, '');
+
+                  var hasStopBtn = false;
+                  var btns = document.querySelectorAll('button, [role="button"]');
+                  for (var j = 0; j < btns.length; j++) {
+                    var b = btns[j];
+                    if (b.disabled) continue;
+                    var label = ((b.getAttribute('aria-label') || '') + ' ' + (b.getAttribute('title') || '') + ' ' + (b.textContent || '')).toLowerCase();
+                    if (label.indexOf('stop') !== -1 || label.indexOf('detener') !== -1 || label.indexOf('cancel') !== -1) {
+                      hasStopBtn = true;
+                      break;
+                    }
+                  }
+
+                  var tail = cleanLines.slice(-10);
+                  var sig = cleanLines.length + ':' + tail.join('|');
                   var preview = tail.length > 0 ? tail[tail.length - 1] : 'El agente terminó de responder.';
                   if (preview.length > 140) preview = preview.slice(0, 140) + '…';
-                  return { sig: sig, preview: preview, busy: isAgentBusy() };
+                  return {
+                    sig: sig,
+                    preview: preview,
+                    busy: sawWorkingLine || hasStopBtn,
+                    lostConnection: lostConnection
+                  };
                 } catch (_) {
-                  return { sig: '', preview: 'El agente terminó de responder.', busy: false };
+                  return { sig: '', preview: 'El agente terminó de responder.', busy: false, lostConnection: false };
                 }
               };
 
@@ -132,25 +172,23 @@ object MobileBridgeScript {
                 var st = readConversationState();
                 baselineSig = st.sig;
                 prevTickSig = st.sig;
-                hasChangedInBg = st.busy;
+                wasBusyInBg = st.busy;
+                hasChangedInBg = false;
                 lastSnippet = st.preview;
-                try {
-                  Object.defineProperty(document, 'hidden', { configurable: true, get: function() { return !!isBg; } });
-                  Object.defineProperty(document, 'visibilityState', { configurable: true, get: function() { return isBg ? 'hidden' : 'visible'; } });
-                  document.dispatchEvent(new Event('visibilitychange'));
-                } catch (_) {}
               };
 
-              // 5. Pumped every 2.0s by Android native Handler while app is in background
+              // 5. Pumped every 1.5s by Android native Handler while app is in background
               window.__AGY_BG_TICK = function() {
                 if (!window.__AGY_BG) return;
                 var st = readConversationState();
+
                 if (st.busy) {
-                  hasChangedInBg = true;
+                  wasBusyInBg = true;
                   prevTickSig = st.sig;
                   lastSnippet = st.preview;
                   return;
                 }
+
                 if (st.sig !== prevTickSig) {
                   if (st.sig !== baselineSig) {
                     hasChangedInBg = true;
@@ -159,11 +197,17 @@ object MobileBridgeScript {
                   prevTickSig = st.sig;
                   return;
                 }
-                // Text changed since leaving the app, agent is no longer busy, and text settled across ticks!
-                if (hasChangedInBg && st.sig !== baselineSig) {
-                  hasChangedInBg = false;
-                  baselineSig = st.sig;
-                  emitNative('Antigravity', lastSnippet || st.preview);
+
+                // Trigger notification when either:
+                // A) The agent was in "Working" state while in background and just finished (!st.busy), OR
+                // B) New conversation text arrived in background and settled across ticks
+                if ((wasBusyInBg || hasChangedInBg) && !st.busy && !st.lostConnection) {
+                  if (st.sig !== baselineSig || wasBusyInBg) {
+                    wasBusyInBg = false;
+                    hasChangedInBg = false;
+                    baselineSig = st.sig;
+                    emitNative('Antigravity', lastSnippet || st.preview);
+                  }
                 }
               };
             }

@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "task_count": 5,
-  "updated_at": "2026-11-22T01:53:06.793243700Z",
+  "task_count": 6,
+  "updated_at": "2026-11-22T02:04:58.851216800Z",
   "tasks": [
     {
       "task_id": "T-20261122-01M80BH9P51EZEAG",
@@ -271,6 +271,53 @@
             "app/src/main/java/com/opensource/antigravity/webview/WebViewHost.kt"
           ],
           "timestamp": "2026-11-22T01:53:06.793243700Z"
+        }
+      ]
+    },
+    {
+      "task_id": "T-20261122-01M80FZQWJ8MVYCQ",
+      "request": "Evitar desconexion del tunel remoto al salir de la app bloqueando visibilitychange y sosteniendo WakeLock/WifiLock",
+      "status": "done",
+      "created_by": "reactive-end",
+      "contributors": [
+        "reactive-end"
+      ],
+      "branches": [
+        "main"
+      ],
+      "files_touched": [
+        "app/src/main/AndroidManifest.xml",
+        "app/src/main/java/com/opensource/antigravity/webview/MobileBridgeScript.kt",
+        "app/src/main/java/com/opensource/antigravity/webview/WebViewHost.kt"
+      ],
+      "summary": "Bloqueados document.hidden y eventos visibilitychange/pagehide/freeze/blur para que Antigravity Remote no desconecte el tunel al PC al salir de la app; anadidos PARTIAL_WAKE_LOCK + WifiLock temporales y deteccion de estado Working",
+      "entry_count": 2,
+      "created_at": "2026-11-22T02:04:58.642917100Z",
+      "updated_at": "2026-11-22T02:04:58.851216800Z",
+      "entries": [
+        {
+          "entry_id": "01M80FZQWMYG1A6KNJNBP4D560",
+          "task_id": "T-20261122-01M80FZQWJ8MVYCQ",
+          "author": "reactive-end",
+          "status": "in_progress",
+          "branch": "main",
+          "summary": "Started task: Evitar desconexion del tunel remoto al salir de la app bloqueando visibilitychange y sosteniendo WakeLock/WifiLock",
+          "files_touched": [],
+          "timestamp": "2026-11-22T02:04:58.677535900Z"
+        },
+        {
+          "entry_id": "01M80FZR24FYRYBRKN16ZS8QTR",
+          "task_id": "T-20261122-01M80FZQWJ8MVYCQ",
+          "author": "reactive-end",
+          "status": "done",
+          "branch": "main",
+          "summary": "Bloqueados document.hidden y eventos visibilitychange/pagehide/freeze/blur para que Antigravity Remote no desconecte el tunel al PC al salir de la app; anadidos PARTIAL_WAKE_LOCK + WifiLock temporales y deteccion de estado Working",
+          "files_touched": [
+            "app/src/main/AndroidManifest.xml",
+            "app/src/main/java/com/opensource/antigravity/webview/MobileBridgeScript.kt",
+            "app/src/main/java/com/opensource/antigravity/webview/WebViewHost.kt"
+          ],
+          "timestamp": "2026-11-22T02:04:58.851216800Z"
         }
       ]
     }

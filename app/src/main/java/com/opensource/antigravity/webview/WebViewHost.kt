@@ -2,19 +2,29 @@ package com.opensource.antigravity.webview
 
 import android.content.Context
 import android.content.MutableContextWrapper
+import android.net.wifi.WifiManager
 import android.os.Handler
 import android.os.Looper
+import android.os.PowerManager
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebView
 
 /**
- * Custom WebView that keeps Chromium's network & V8 engine active when the user switches
- * to another app, without requiring a persistent Foreground Service notification.
+ * Custom WebView that reports permanent foreground visibility and focus to Chromium so
+ * switching apps never disconnects the live WebSocket/gRPC stream to the remote PC instance.
  */
 class AlwaysActiveWebView(context: Context) : WebView(context) {
     override fun onWindowVisibilityChanged(visibility: Int) {
         super.onWindowVisibilityChanged(View.VISIBLE)
+    }
+
+    override fun onVisibilityChanged(changedView: View, visibility: Int) {
+        super.onVisibilityChanged(changedView, View.VISIBLE)
+    }
+
+    override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
+        super.onWindowFocusChanged(true)
     }
 }
 
@@ -33,6 +43,9 @@ object WebViewHost {
     @Volatile
     private var cachedWebView: AlwaysActiveWebView? = null
 
+    private var wakeLock: PowerManager.WakeLock? = null
+    private var wifiLock: WifiManager.WifiLock? = null
+
     private val bgTicker = object : Runnable {
         override fun run() {
             if (!isInBackground) return
@@ -48,6 +61,8 @@ object WebViewHost {
             bgTickCount++
             if (bgTickCount < MAX_BG_TICKS) {
                 mainHandler.postDelayed(this, BG_TICK_INTERVAL_MS)
+            } else {
+                releaseBackgroundLocks()
             }
         }
     }
@@ -74,6 +89,14 @@ object WebViewHost {
         isInBackground = inBackground
         mainHandler.removeCallbacks(bgTicker)
         val view = cachedWebView ?: return
+        val appCtx = view.context.applicationContext
+
+        if (inBackground) {
+            acquireBackgroundLocks(appCtx)
+        } else {
+            releaseBackgroundLocks()
+        }
+
         runCatching {
             view.onResume()
             view.resumeTimers()
@@ -95,6 +118,43 @@ object WebViewHost {
         (view.parent as? ViewGroup)?.removeView(view)
     }
 
-    private const val BG_TICK_INTERVAL_MS = 2_000L
-    private const val MAX_BG_TICKS = 900 // 30 minutes max background watch
+    private fun acquireBackgroundLocks(appContext: Context) {
+        runCatching {
+            if (wakeLock == null) {
+                val pm = appContext.getSystemService(Context.POWER_SERVICE) as PowerManager
+                wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Antigravity:RemoteStreamLock").apply {
+                    setReferenceCounted(false)
+                }
+            }
+            if (wakeLock?.isHeld == false) {
+                wakeLock?.acquire(LOCK_TIMEOUT_MS)
+            }
+
+            if (wifiLock == null) {
+                val wm = appContext.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+                val mode = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                    WifiManager.WIFI_MODE_FULL_LOW_LATENCY
+                } else {
+                    3 // WIFI_MODE_FULL_HIGH_PERF on API 26-28
+                }
+                wifiLock = wm.createWifiLock(mode, "Antigravity:RemoteWifiLock").apply {
+                    setReferenceCounted(false)
+                }
+            }
+            if (wifiLock?.isHeld == false) {
+                wifiLock?.acquire()
+            }
+        }
+    }
+
+    private fun releaseBackgroundLocks() {
+        runCatching {
+            if (wakeLock?.isHeld == true) wakeLock?.release()
+            if (wifiLock?.isHeld == true) wifiLock?.release()
+        }
+    }
+
+    private const val BG_TICK_INTERVAL_MS = 1_500L
+    private const val MAX_BG_TICKS = 600 // 15 minutes max background watch
+    private const val LOCK_TIMEOUT_MS = 15 * 60 * 1_000L
 }
