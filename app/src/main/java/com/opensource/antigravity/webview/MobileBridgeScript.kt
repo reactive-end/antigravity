@@ -6,17 +6,34 @@ object MobileBridgeScript {
 :root, html, body {
   color-scheme: dark;
   --background: #000000;
+  --color-background: #000000;
+  --content: #000000;
+  --focus-ring-offset-color: #000000;
   --onyx-frame: #000000;
   --onyx-well: #131314;
+  --sidebar: #0E0E10;
+  --color-sidebar: #0E0E10;
+  --shell: #131314;
   --card: #1E1F20;
+  --color-card: #1E1F20;
+  --glass: #1E1F20;
   --onyx-raised: #282A2C;
   --onyx-selected: #333537;
   --onyx-key: #282A2C;
   --muted: rgba(255, 255, 255, 0.06);
+  --color-muted: rgba(255, 255, 255, 0.06);
   --border: rgba(255, 255, 255, 0.06);
+  --color-border: rgba(255, 255, 255, 0.06);
   --card-border: rgba(255, 255, 255, 0.05);
+  --color-card-border: rgba(255, 255, 255, 0.05);
   --primary: #1A73E8;
+  --color-primary: #1A73E8;
   --cta: #1A73E8;
+  --nux-composer-radius: 28px;
+  --nux-composer-frame-radius: 28px;
+  --nux-radius-lg: 16px;
+  --nux-radius-xl: 24px;
+  --nux-radius-2xl: 28px;
   --ga-control-height-xs: 34px;
   --ga-control-height-sm: 40px;
   --ga-control-height-md: 44px;
@@ -28,8 +45,10 @@ object MobileBridgeScript {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
-html, body {
+html, body, div.app-container, div.iframe-panel {
   background-color: #000000 !important;
+}
+html, body {
   color: #E3E3E3;
   max-width: 100vw;
   overflow-x: clip;
@@ -87,6 +106,11 @@ html body div.relative.w-full.py-1 > button.flex.items-center.justify-between.w-
   font-weight: 500;
   color: #E3E3E3 !important;
 }
+html body nav[aria-label="Breadcrumb"] {
+  font-size: 16px;
+  font-weight: 500;
+  color: #E3E3E3;
+}
 html body button.agy-button-icon-touch {
   width: 38px;
   height: 38px;
@@ -107,6 +131,36 @@ html body button.header-feedback-btn.header-feedback-btn--fullscreen {
   margin-top: -3px;
   transform: translateX(-6px);
   color: #C4C7C5;
+}
+/* Chat message action buttons & scroll-to-bottom pill */
+html body div.flex.shrink-0.items-center {
+  gap: 6px;
+}
+html body button.agy-button.agy-button-icon:not(.agy-button-icon-sm):not(.agy-button-icon-touch) {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #9AA0A6;
+}
+html body button.agy-button.agy-button-icon:not(.agy-button-icon-sm):not(.agy-button-icon-touch) svg {
+  width: 18px;
+  height: 18px;
+}
+html body button[aria-label="Scroll to Bottom"] {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 9999px;
+  background-color: #282A2C !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  color: #E3E3E3 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
 }
 /* Floating Gemini Material 3 pill composer (strips nested p-px wireframe wrapper) */
 html body div.surface-composer {
@@ -157,7 +211,7 @@ html body div.surface-composer-card button[aria-label*="Select model"] {
   border: none;
   min-width: 0;
   flex-shrink: 1;
-  max-width: 54vw;
+  max-width: 48vw;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -269,22 +323,30 @@ html body .agy-button:active {
         """
         (function() {
           try {
-            var vp = document.querySelector('meta[name="viewport"]');
-            var content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover';
-            if (!vp && document.head) {
-              vp = document.createElement('meta');
-              vp.name = 'viewport';
-              vp.content = content;
-              document.head.appendChild(vp);
-            } else if (vp && vp.content.indexOf('viewport-fit=cover') === -1) {
-              vp.content = content;
-            }
+            var ensureViewport = function() {
+              try {
+                var vpTarget = document.head || document.documentElement;
+                if (!vpTarget) return;
+                var vp = document.querySelector('meta[name="viewport"]');
+                var content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover';
+                if (!vp) {
+                  vp = document.createElement('meta');
+                  vp.name = 'viewport';
+                  vp.content = content;
+                  vpTarget.appendChild(vp);
+                } else if (vp.content.indexOf('viewport-fit=cover') === -1) {
+                  vp.content = content;
+                }
+              } catch (_) {}
+            };
 
             var styleId = 'antigravity-mobile-polish';
             var cssText = `$escapedCss`;
             var upsertPolish = function(targetRoot) {
               if (!targetRoot) return;
-              var st = targetRoot.getElementById ? targetRoot.getElementById(styleId) : targetRoot.querySelector('#' + styleId);
+              var st = (targetRoot === document.head || targetRoot === document.documentElement)
+                ? document.getElementById(styleId)
+                : (targetRoot.getElementById ? targetRoot.getElementById(styleId) : targetRoot.querySelector('#' + styleId));
               if (!st) {
                 st = document.createElement('style');
                 st.id = styleId;
@@ -292,15 +354,77 @@ html body .agy-button:active {
               if (st.textContent !== cssText) {
                 st.textContent = cssText;
               }
-              targetRoot.appendChild(st);
-            };
-            if (document.head) upsertPolish(document.head);
-            try {
-              var allEls = document.getElementsByTagName('*');
-              for (var sIdx = 0; sIdx < allEls.length; sIdx++) {
-                if (allEls[sIdx].shadowRoot) upsertPolish(allEls[sIdx].shadowRoot);
+              if (st.parentNode !== targetRoot || targetRoot.lastElementChild !== st) {
+                targetRoot.appendChild(st);
               }
-            } catch (_) {}
+            };
+            var applyAllPolish = function() {
+              ensureViewport();
+              var rootTarget = document.head || document.documentElement;
+              if (rootTarget) upsertPolish(rootTarget);
+              try {
+                var allEls = document.getElementsByTagName('*');
+                for (var sIdx = 0; sIdx < allEls.length; sIdx++) {
+                  if (allEls[sIdx].shadowRoot) upsertPolish(allEls[sIdx].shadowRoot);
+                }
+              } catch (_) {}
+            };
+            applyAllPolish();
+
+            if (!window.__AGY_POLISH_OBSERVING) {
+              window.__AGY_POLISH_OBSERVING = true;
+              var polishScheduled = false;
+              var schedulePolish = function() {
+                if (polishScheduled) return;
+                polishScheduled = true;
+                var run = function() {
+                  polishScheduled = false;
+                  applyAllPolish();
+                };
+                if (typeof requestAnimationFrame === 'function') {
+                  requestAnimationFrame(run);
+                } else {
+                  setTimeout(run, 16);
+                }
+              };
+              try {
+                document.addEventListener('DOMContentLoaded', applyAllPolish, true);
+                window.addEventListener('load', applyAllPolish, true);
+                window.addEventListener('popstate', function() { setTimeout(applyAllPolish, 60); }, true);
+              } catch (_) {}
+              try {
+                var headObserved = null;
+                var ensureHeadObserver = function() {
+                  if (document.head && headObserved !== document.head && typeof MutationObserver !== 'undefined') {
+                    headObserved = document.head;
+                    new MutationObserver(function(muts) {
+                      for (var m = 0; m < muts.length; m++) {
+                        if (muts[m].addedNodes && muts[m].addedNodes.length) {
+                          var last = document.head.lastElementChild;
+                          if (!last || last.id !== styleId) {
+                            schedulePolish();
+                            return;
+                          }
+                        }
+                      }
+                    }).observe(document.head, { childList: true });
+                  }
+                };
+                ensureHeadObserver();
+                var docTarget = document.documentElement || document;
+                if (docTarget && typeof MutationObserver !== 'undefined') {
+                  var bootObs = new MutationObserver(function() {
+                    if (document.head) {
+                      ensureHeadObserver();
+                      schedulePolish();
+                      bootObs.disconnect();
+                    }
+                  });
+                  bootObs.observe(docTarget, { childList: true, subtree: true });
+                  setTimeout(function() { try { bootObs.disconnect(); } catch (_) {} }, 10000);
+                }
+              } catch (_) {}
+            }
 
             if (!window.AntigravityNativeBridge) return;
 
@@ -376,6 +500,9 @@ html body .agy-button:active {
             // Deep walker that traverses both regular DOM and all open Shadow Roots
             var readDeepConversationState = function() {
               try {
+                if (!document.body) {
+                  return { sig: '', preview: 'El agente terminó de responder.', busy: false, lostConnection: false };
+                }
                 var chunks = [];
                 var sawBusy = false;
                 var lostConn = false;
@@ -449,8 +576,33 @@ html body .agy-button:active {
               }
             };
 
+            var dispatchBgToFrames = function(payload) {
+              try {
+                if (window === window.top && window.frames) {
+                  for (var fi = 0; fi < window.frames.length; fi++) {
+                    try { window.frames[fi].postMessage(payload, '*'); } catch (_) {}
+                  }
+                }
+              } catch (_) {}
+            };
+
+            if (!window.__AGY_MSG_BRIDGE_BOUND) {
+              window.__AGY_MSG_BRIDGE_BOUND = true;
+              try {
+                window.addEventListener('message', function(e) {
+                  if (window === window.top || !e || !e.data) return;
+                  if (e.data.__agyCmd === 'SET_BG' && window.__AGY_SET_BG) {
+                    window.__AGY_SET_BG(e.data.val);
+                  } else if (e.data.__agyCmd === 'BG_TICK' && window.__AGY_BG_TICK) {
+                    window.__AGY_BG_TICK();
+                  }
+                }, false);
+              } catch (_) {}
+            }
+
             window.__AGY_SET_BG = function(isBg) {
               window.__AGY_BG = !!isBg;
+              dispatchBgToFrames({ __agyCmd: 'SET_BG', val: !!isBg });
               var st = readDeepConversationState();
               window.__AGY_BASE_SIG = st.sig;
               window.__AGY_PREV_SIG = st.sig;
@@ -460,6 +612,7 @@ html body .agy-button:active {
             };
 
             window.__AGY_BG_TICK = function() {
+              dispatchBgToFrames({ __agyCmd: 'BG_TICK' });
               if (!window.__AGY_BG) return;
               var st = readDeepConversationState();
 

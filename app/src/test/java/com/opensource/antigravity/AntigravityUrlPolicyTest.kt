@@ -19,6 +19,7 @@ class AntigravityUrlPolicyTest {
         assertTrue(AntigravityUrlPolicy.shouldLoadInApp("https://www.google.com/accounts/ServiceLogin"))
         assertTrue(AntigravityUrlPolicy.shouldLoadInApp("https://myaccount.google.com/security"))
         assertTrue(AntigravityUrlPolicy.shouldLoadInApp("https://antigravity-pa.googleapis.com/v1/session"))
+        assertTrue(AntigravityUrlPolicy.shouldLoadInApp("https://antigravity.static.usercontent.goog/web/2.34.0/?iframe=true"))
     }
 
     @Test
@@ -45,5 +46,14 @@ class AntigravityUrlPolicyTest {
         assertFalse(clean.contains("; wv"))
         assertFalse(clean.contains("Version/4.0"))
         assertTrue(clean.contains("Chrome/134.0.0.0"))
+    }
+
+    @Test
+    fun documentStartOriginsCoverRemoteHostAndUserContentIframe() {
+        val origins = AntigravityUrlPolicy.DOCUMENT_START_ORIGINS
+        assertTrue(origins.contains("https://antigravity.google.com"))
+        assertTrue(origins.contains("https://antigravity.static.usercontent.goog"))
+        assertTrue(origins.contains("https://*.usercontent.goog"))
+        assertFalse(origins.contains("*"))
     }
 }

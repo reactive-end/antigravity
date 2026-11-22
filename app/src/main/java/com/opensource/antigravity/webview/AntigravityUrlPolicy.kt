@@ -8,6 +8,13 @@ object AntigravityUrlPolicy {
 
     const val REMOTE_HOME_URL = "https://antigravity.google.com/remote"
 
+    val DOCUMENT_START_ORIGINS: Set<String> = setOf(
+        "https://antigravity.google.com",
+        "https://*.antigravity.google.com",
+        "https://antigravity.static.usercontent.goog",
+        "https://*.usercontent.goog",
+    )
+
     // Covers google.com, accounts.google.com, accounts.google.co.ve, www.google.com.co,
     // accounts.google.es, antigravity.google.com, myaccount.google.com, etc.
     private val googleRegionalHostRegex = Regex("^([a-z0-9-]+\\.)*google(\\.[a-z]{2,3}){1,2}$")
@@ -27,6 +34,7 @@ object AntigravityUrlPolicy {
         ".googleapis.com",
         ".gstatic.com",
         ".googleusercontent.com",
+        ".usercontent.goog",
         ".youtube.com",
         ".gvt1.com",
         ".gvt2.com",

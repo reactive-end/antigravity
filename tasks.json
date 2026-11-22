@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "task_count": 11,
-  "updated_at": "2026-11-22T03:25:53.141585300Z",
+  "task_count": 12,
+  "updated_at": "2026-11-22T03:39:41.719613100Z",
   "tasks": [
     {
       "task_id": "T-20261122-01M80BH9P51EZEAG",
@@ -539,6 +539,61 @@
             "app/src/test/java/com/opensource/antigravity/MobileBridgeScriptTest.kt"
           ],
           "timestamp": "2026-11-22T03:25:53.141585300Z"
+        }
+      ]
+    },
+    {
+      "task_id": "T-20261122-01M80ND5M1AGA7BP",
+      "request": "Inyeccion cross-origin en iframe de instancias locales (/r/*) con WebViewCompat y ajustes UI de chat (v1.4.0)",
+      "status": "done",
+      "created_by": "reactive-end",
+      "contributors": [
+        "reactive-end"
+      ],
+      "branches": [
+        "main"
+      ],
+      "files_touched": [
+        "app/build.gradle.kts",
+        "app/src/main/java/com/opensource/antigravity/webview/AntigravityUrlPolicy.kt",
+        "app/src/main/java/com/opensource/antigravity/webview/AntigravityWebView.kt",
+        "app/src/main/java/com/opensource/antigravity/webview/MobileBridgeScript.kt",
+        "app/src/test/java/com/opensource/antigravity/AntigravityUrlPolicyTest.kt",
+        "app/src/test/java/com/opensource/antigravity/MobileBridgeScriptTest.kt",
+        "gradle/libs.versions.toml"
+      ],
+      "summary": "Agregado androidx.webkit:webkit:1.18.0 (WebViewCompat.addDocumentStartJavaScript) para inyectar CSS/bridge en https://antigravity.static.usercontent.goog, puente postMessage cross-frame para segundo plano, tokens Tailwind v4 (--color-*, --nux-*), botones de chat 36-40px y APK v1.4.0 (374218 bytes).",
+      "entry_count": 2,
+      "created_at": "2026-11-22T03:39:41.569005900Z",
+      "updated_at": "2026-11-22T03:39:41.719613100Z",
+      "entries": [
+        {
+          "entry_id": "01M80ND5M2AYCFNPEBB7M3KJJN",
+          "task_id": "T-20261122-01M80ND5M1AGA7BP",
+          "author": "reactive-end",
+          "status": "in_progress",
+          "branch": "main",
+          "summary": "Started task: Inyeccion cross-origin en iframe de instancias locales (/r/*) con WebViewCompat y ajustes UI de chat (v1.4.0)",
+          "files_touched": [],
+          "timestamp": "2026-11-22T03:39:41.603538600Z"
+        },
+        {
+          "entry_id": "01M80ND5QKN4X114MV7JS73QZ6",
+          "task_id": "T-20261122-01M80ND5M1AGA7BP",
+          "author": "reactive-end",
+          "status": "done",
+          "branch": "main",
+          "summary": "Agregado androidx.webkit:webkit:1.18.0 (WebViewCompat.addDocumentStartJavaScript) para inyectar CSS/bridge en https://antigravity.static.usercontent.goog, puente postMessage cross-frame para segundo plano, tokens Tailwind v4 (--color-*, --nux-*), botones de chat 36-40px y APK v1.4.0 (374218 bytes).",
+          "files_touched": [
+            "app/build.gradle.kts",
+            "app/src/main/java/com/opensource/antigravity/webview/AntigravityUrlPolicy.kt",
+            "app/src/main/java/com/opensource/antigravity/webview/AntigravityWebView.kt",
+            "app/src/main/java/com/opensource/antigravity/webview/MobileBridgeScript.kt",
+            "app/src/test/java/com/opensource/antigravity/AntigravityUrlPolicyTest.kt",
+            "app/src/test/java/com/opensource/antigravity/MobileBridgeScriptTest.kt",
+            "gradle/libs.versions.toml"
+          ],
+          "timestamp": "2026-11-22T03:39:41.719613100Z"
         }
       ]
     }

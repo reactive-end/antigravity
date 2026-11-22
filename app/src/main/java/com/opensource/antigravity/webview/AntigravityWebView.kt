@@ -15,6 +15,8 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.webkit.WebViewCompat
+import androidx.webkit.WebViewFeature
 
 data class WebViewCallbacks(
     val onProgressChanged: (Int) -> Unit,
@@ -84,6 +86,16 @@ object AntigravityWebViewFactory {
             }
 
             addJavascriptInterface(jsBridge, AntigravityJsBridge.BRIDGE_NAME)
+
+            runCatching {
+                if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
+                    WebViewCompat.addDocumentStartJavaScript(
+                        this,
+                        MobileBridgeScript.INJECT_SCRIPT,
+                        AntigravityUrlPolicy.DOCUMENT_START_ORIGINS,
+                    )
+                }
+            }
 
             webViewClient = buildWebViewClient(callbacks)
             webChromeClient = buildWebChromeClient(context, callbacks)

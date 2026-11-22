@@ -1,0 +1,18 @@
+{
+  "entry_id": "01M80ND5QKN4X114MV7JS73QZ6",
+  "task_id": "T-20261122-01M80ND5M1AGA7BP",
+  "author": "reactive-end",
+  "status": "done",
+  "branch": "main",
+  "summary": "Agregado androidx.webkit:webkit:1.18.0 (WebViewCompat.addDocumentStartJavaScript) para inyectar CSS/bridge en https://antigravity.static.usercontent.goog, puente postMessage cross-frame para segundo plano, tokens Tailwind v4 (--color-*, --nux-*), botones de chat 36-40px y APK v1.4.0 (374218 bytes).",
+  "files_touched": [
+    "app/build.gradle.kts",
+    "app/src/main/java/com/opensource/antigravity/webview/AntigravityUrlPolicy.kt",
+    "app/src/main/java/com/opensource/antigravity/webview/AntigravityWebView.kt",
+    "app/src/main/java/com/opensource/antigravity/webview/MobileBridgeScript.kt",
+    "app/src/test/java/com/opensource/antigravity/AntigravityUrlPolicyTest.kt",
+    "app/src/test/java/com/opensource/antigravity/MobileBridgeScriptTest.kt",
+    "gradle/libs.versions.toml"
+  ],
+  "timestamp": "2026-11-22T03:39:41.719613100Z"
+}

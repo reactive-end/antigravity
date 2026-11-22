@@ -11,19 +11,25 @@ class MobileBridgeScriptTest {
     fun polishCssEnforcesComfortableTouchTargetsAndDisablesBackdropFilter() {
         val css = MobileBridgeScript.MOBILE_POLISH_CSS
         assertTrue(css.contains("--background: #000000"))
+        assertTrue(css.contains("--color-background: #000000"))
         assertTrue(css.contains("--card: #1E1F20"))
+        assertTrue(css.contains("--color-card: #1E1F20"))
         assertTrue(css.contains("--ga-control-height-sm: 40px"))
         assertTrue(css.contains("--ga-control-height-md: 44px"))
         assertTrue(css.contains("div.surface-composer-card"))
         assertTrue(css.contains(".agy-button-icon-sm"))
+        assertTrue(css.contains(".agy-button-icon"))
         assertTrue(css.contains(".agy-send-button"))
         assertTrue(css.contains("header-feedback-btn--fullscreen"))
+        assertTrue(css.contains("Scroll to Bottom"))
         assertTrue(css.contains("Select model"))
         assertTrue(css.contains("backdrop-filter: none !important"))
         assertFalse(css.contains("a.gb_C"))
 
         val js = MobileBridgeScript.INJECT_SCRIPT
         assertTrue(js.contains("antigravity-mobile-polish"))
+        assertTrue(js.contains("dispatchBgToFrames"))
+        assertTrue(js.contains("MutationObserver"))
         assertFalse(js.contains("\${"))
     }
 }

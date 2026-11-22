@@ -1,0 +1,10 @@
+{
+  "entry_id": "01M80ND5M2AYCFNPEBB7M3KJJN",
+  "task_id": "T-20261122-01M80ND5M1AGA7BP",
+  "author": "reactive-end",
+  "status": "in_progress",
+  "branch": "main",
+  "summary": "Started task: Inyeccion cross-origin en iframe de instancias locales (/r/*) con WebViewCompat y ajustes UI de chat (v1.4.0)",
+  "files_touched": [],
+  "timestamp": "2026-11-22T03:39:41.603538600Z"
+}
