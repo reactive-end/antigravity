@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "task_count": 9,
-  "updated_at": "2026-11-22T03:15:33.669249300Z",
+  "task_count": 10,
+  "updated_at": "2026-11-22T03:16:56.420865300Z",
   "tasks": [
     {
       "task_id": "T-20261122-01M80BH9P51EZEAG",
@@ -449,6 +449,49 @@
           "summary": "Aplicados overrides CSS moviles (tokens Onyx, controles 38-44px, Select model truncado, reinyeccion SPA y Shadow DOM), unit tests y APK v1.2.0 compilado.",
           "files_touched": [],
           "timestamp": "2026-11-22T03:15:33.669249300Z"
+        }
+      ]
+    },
+    {
+      "task_id": "T-20261122-01M80M3GAT95A2JC",
+      "request": "Traducir README.md al ingles",
+      "status": "done",
+      "created_by": "reactive-end",
+      "contributors": [
+        "reactive-end"
+      ],
+      "branches": [
+        "main"
+      ],
+      "files_touched": [
+        "README.md"
+      ],
+      "summary": "README.md traducido al ingles manteniendo el aviso de marca registrada de Google LLC y las instrucciones de compilacion/uso.",
+      "entry_count": 2,
+      "created_at": "2026-11-22T03:16:56.282706700Z",
+      "updated_at": "2026-11-22T03:16:56.420865300Z",
+      "entries": [
+        {
+          "entry_id": "01M80M3GAWQ8MCAZKH7SRCHNP4",
+          "task_id": "T-20261122-01M80M3GAT95A2JC",
+          "author": "reactive-end",
+          "status": "in_progress",
+          "branch": "main",
+          "summary": "Started task: Traducir README.md al ingles",
+          "files_touched": [],
+          "timestamp": "2026-11-22T03:16:56.317895100Z"
+        },
+        {
+          "entry_id": "01M80M3GE346EFQ3M910JN73SV",
+          "task_id": "T-20261122-01M80M3GAT95A2JC",
+          "author": "reactive-end",
+          "status": "done",
+          "branch": "main",
+          "summary": "README.md traducido al ingles manteniendo el aviso de marca registrada de Google LLC y las instrucciones de compilacion/uso.",
+          "files_touched": [
+            "README.md"
+          ],
+          "timestamp": "2026-11-22T03:16:56.420865300Z"
         }
       ]
     }
