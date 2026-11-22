@@ -1,0 +1,6 @@
+{
+  "task_id": "T-20261122-01M80BH9P51EZEAG",
+  "created_by": "reactive-end",
+  "request": "Construir app Android nativa Antigravity apuntando a https://antigravity.google.com/remote con estética Antigravity, sesión persistente, notificaciones nativas y compilación de APK validada en emulador con Anvil",
+  "created_at": "2026-11-22T00:47:11.045093400Z"
+}
