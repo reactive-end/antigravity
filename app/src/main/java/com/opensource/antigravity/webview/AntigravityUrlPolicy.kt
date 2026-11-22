@@ -71,6 +71,15 @@ object AntigravityUrlPolicy {
             host.endsWith(".antigravity.google.com")
     }
 
+    fun isTrustedMediaOrigin(originHost: String?): Boolean {
+        val host = originHost?.trim()?.lowercase().orEmpty()
+        if (host.isEmpty()) return false
+        return host == "antigravity.google.com" ||
+            host.endsWith(".antigravity.google.com") ||
+            host == "antigravity.static.usercontent.goog" ||
+            host.endsWith(".usercontent.goog")
+    }
+
     fun sanitizeUserAgent(defaultUserAgent: String): String {
         return defaultUserAgent
             .replace("; wv)", ")")

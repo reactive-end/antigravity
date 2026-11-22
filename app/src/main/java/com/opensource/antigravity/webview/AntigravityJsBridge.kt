@@ -16,6 +16,7 @@ class AntigravityJsBridge(
 
     @JavascriptInterface
     fun notify(title: String, body: String) {
+        if (!WebViewHost.isInBackground) return
         val now = System.currentTimeMillis()
         val key = "${title.trim()}|${body.trim()}"
         val prevAt = lastNotificationAtMs.get()

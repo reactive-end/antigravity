@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Message
 import android.view.View
 import android.view.ViewGroup
+import android.webkit.PermissionRequest
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
@@ -24,6 +25,8 @@ data class WebViewCallbacks(
     val onPageFirstPaint: () -> Unit,
     val onMainFrameError: (description: String) -> Unit,
     val onFileChooser: (ValueCallback<Array<Uri>>) -> Unit,
+    val onAudioPermissionRequest: (PermissionRequest) -> Unit,
+    val onAudioPermissionRequestCanceled: (PermissionRequest) -> Unit,
 )
 
 object AntigravityWebViewFactory {
@@ -247,6 +250,23 @@ object AntigravityWebViewFactory {
             val cb = filePathCallback ?: return false
             callbacks.onFileChooser(cb)
             return true
+        }
+
+        override fun onPermissionRequest(request: PermissionRequest?) {
+            if (request == null) return
+            val originHost = request.origin?.host
+            val wantsAudio = request.resources.contains(PermissionRequest.RESOURCE_AUDIO_CAPTURE)
+            if (wantsAudio && AntigravityUrlPolicy.isTrustedMediaOrigin(originHost)) {
+                callbacks.onAudioPermissionRequest(request)
+            } else {
+                request.deny()
+            }
+        }
+
+        override fun onPermissionRequestCanceled(request: PermissionRequest?) {
+            if (request != null) {
+                callbacks.onAudioPermissionRequestCanceled(request)
+            }
         }
     }
 }

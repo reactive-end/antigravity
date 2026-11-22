@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "task_count": 12,
-  "updated_at": "2026-11-22T03:39:41.719613100Z",
+  "task_count": 13,
+  "updated_at": "2026-11-22T04:00:15.692130700Z",
   "tasks": [
     {
       "task_id": "T-20261122-01M80BH9P51EZEAG",
@@ -594,6 +594,65 @@
             "gradle/libs.versions.toml"
           ],
           "timestamp": "2026-11-22T03:39:41.719613100Z"
+        }
+      ]
+    },
+    {
+      "task_id": "T-20261122-01M80PJTNR749WT3",
+      "request": "Permiso de audio WebView, fix de notificaciones, topbar minimalista en chat, bottom sheets y miniaturas de adjuntos (v1.5.0)",
+      "status": "done",
+      "created_by": "reactive-end",
+      "contributors": [
+        "reactive-end"
+      ],
+      "branches": [
+        "main"
+      ],
+      "files_touched": [
+        "app/build.gradle.kts",
+        "app/src/main/AndroidManifest.xml",
+        "app/src/main/java/com/opensource/antigravity/MainActivity.kt",
+        "app/src/main/java/com/opensource/antigravity/webview/AntigravityJsBridge.kt",
+        "app/src/main/java/com/opensource/antigravity/webview/AntigravityUrlPolicy.kt",
+        "app/src/main/java/com/opensource/antigravity/webview/AntigravityWebView.kt",
+        "app/src/main/java/com/opensource/antigravity/webview/MobileBridgeScript.kt",
+        "app/src/test/java/com/opensource/antigravity/AntigravityUrlPolicyTest.kt",
+        "app/src/test/java/com/opensource/antigravity/MobileBridgeScriptTest.kt"
+      ],
+      "summary": "RECORD_AUDIO + WebChromeClient.onPermissionRequest con fallback a ajustes; fix notificaciones (solo background, filtro just now/composer/modales, NativeNotification EventTarget); topbar de conversacion minimalista estilo Gemini via CONV_MODE; bottom sheets elevados #1E1F20 con iconos 22px; fix boton X de fotos adjuntas; tests y APK v1.5.0 (374290 bytes).",
+      "entry_count": 2,
+      "created_at": "2026-11-22T04:00:15.544619900Z",
+      "updated_at": "2026-11-22T04:00:15.692130700Z",
+      "entries": [
+        {
+          "entry_id": "01M80PJTNTPCFG8WG904ZWZK14",
+          "task_id": "T-20261122-01M80PJTNR749WT3",
+          "author": "reactive-end",
+          "status": "in_progress",
+          "branch": "main",
+          "summary": "Started task: Permiso de audio WebView, fix de notificaciones, topbar minimalista en chat, bottom sheets y miniaturas de adjuntos (v1....",
+          "files_touched": [],
+          "timestamp": "2026-11-22T04:00:15.580916100Z"
+        },
+        {
+          "entry_id": "01M80PJTSBARZQKRQFEDJZ4WHC",
+          "task_id": "T-20261122-01M80PJTNR749WT3",
+          "author": "reactive-end",
+          "status": "done",
+          "branch": "main",
+          "summary": "RECORD_AUDIO + WebChromeClient.onPermissionRequest con fallback a ajustes; fix notificaciones (solo background, filtro just now/composer/modales, NativeNotification EventTarget); topbar de conversacion minimalista estilo Gemini via CONV_MODE; bottom sheets elevados #1E1F20 con iconos 22px; fix boton X de fotos adjuntas; tests y APK v1.5.0 (374290 bytes).",
+          "files_touched": [
+            "app/build.gradle.kts",
+            "app/src/main/AndroidManifest.xml",
+            "app/src/main/java/com/opensource/antigravity/MainActivity.kt",
+            "app/src/main/java/com/opensource/antigravity/webview/AntigravityJsBridge.kt",
+            "app/src/main/java/com/opensource/antigravity/webview/AntigravityUrlPolicy.kt",
+            "app/src/main/java/com/opensource/antigravity/webview/AntigravityWebView.kt",
+            "app/src/main/java/com/opensource/antigravity/webview/MobileBridgeScript.kt",
+            "app/src/test/java/com/opensource/antigravity/AntigravityUrlPolicyTest.kt",
+            "app/src/test/java/com/opensource/antigravity/MobileBridgeScriptTest.kt"
+          ],
+          "timestamp": "2026-11-22T04:00:15.692130700Z"
         }
       ]
     }

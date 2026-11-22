@@ -1,0 +1,20 @@
+{
+  "entry_id": "01M80PJTSBARZQKRQFEDJZ4WHC",
+  "task_id": "T-20261122-01M80PJTNR749WT3",
+  "author": "reactive-end",
+  "status": "done",
+  "branch": "main",
+  "summary": "RECORD_AUDIO + WebChromeClient.onPermissionRequest con fallback a ajustes; fix notificaciones (solo background, filtro just now/composer/modales, NativeNotification EventTarget); topbar de conversacion minimalista estilo Gemini via CONV_MODE; bottom sheets elevados #1E1F20 con iconos 22px; fix boton X de fotos adjuntas; tests y APK v1.5.0 (374290 bytes).",
+  "files_touched": [
+    "app/build.gradle.kts",
+    "app/src/main/AndroidManifest.xml",
+    "app/src/main/java/com/opensource/antigravity/MainActivity.kt",
+    "app/src/main/java/com/opensource/antigravity/webview/AntigravityJsBridge.kt",
+    "app/src/main/java/com/opensource/antigravity/webview/AntigravityUrlPolicy.kt",
+    "app/src/main/java/com/opensource/antigravity/webview/AntigravityWebView.kt",
+    "app/src/main/java/com/opensource/antigravity/webview/MobileBridgeScript.kt",
+    "app/src/test/java/com/opensource/antigravity/AntigravityUrlPolicyTest.kt",
+    "app/src/test/java/com/opensource/antigravity/MobileBridgeScriptTest.kt"
+  ],
+  "timestamp": "2026-11-22T04:00:15.692130700Z"
+}

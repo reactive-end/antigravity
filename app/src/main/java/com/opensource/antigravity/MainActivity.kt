@@ -1,16 +1,20 @@
 package com.opensource.antigravity
 
 import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.webkit.PermissionRequest
 import android.webkit.ValueCallback
 import android.widget.Button
 import android.widget.FrameLayout
@@ -23,6 +27,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
@@ -52,6 +57,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var errorTextView: TextView
 
     private var pendingFileCallback: ValueCallback<Array<Uri>>? = null
+    private var pendingAudioPermissionRequest: PermissionRequest? = null
     private var hasError = false
 
     private val backCallback = object : OnBackPressedCallback(false) {
@@ -77,6 +83,21 @@ class MainActivity : ComponentActivity() {
             sendOneTimeVerificationNotification()
         } else {
             openNotificationSettingsWithToast()
+        }
+    }
+
+    private val audioPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        val request = pendingAudioPermissionRequest
+        pendingAudioPermissionRequest = null
+        if (granted && hasAudioRecordPermission()) {
+            runCatching { request?.grant(arrayOf(PermissionRequest.RESOURCE_AUDIO_CAPTURE)) }
+        } else {
+            runCatching { request?.deny() }
+            openAppPermissionsSettingsWithToast(
+                "Activa el permiso de micrófono de Antigravity para grabar notas de voz",
+            )
         }
     }
 
@@ -118,6 +139,8 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
+        runCatching { pendingAudioPermissionRequest?.deny() }
+        pendingAudioPermissionRequest = null
         WebViewHost.detachFromActivity(applicationContext)
         webView = null
         super.onDestroy()
@@ -185,6 +208,16 @@ class MainActivity : ComponentActivity() {
                     pendingFileCallback?.onReceiveValue(emptyArray())
                     pendingFileCallback = callback
                     fileChooserLauncher.launch(arrayOf("*/*"))
+                },
+                onAudioPermissionRequest = { request ->
+                    handleWebAudioPermissionRequest(request)
+                },
+                onAudioPermissionRequestCanceled = { request ->
+                    runOnUiThread {
+                        if (pendingAudioPermissionRequest === request) {
+                            pendingAudioPermissionRequest = null
+                        }
+                    }
                 },
             ),
         )
@@ -324,6 +357,37 @@ class MainActivity : ComponentActivity() {
         ).show()
         runCatching {
             startActivity(notificationHelper.buildNotificationSettingsIntent())
+        }
+    }
+
+    private fun hasAudioRecordPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.RECORD_AUDIO,
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun handleWebAudioPermissionRequest(request: PermissionRequest) {
+        runOnUiThread {
+            if (hasAudioRecordPermission()) {
+                runCatching { request.grant(arrayOf(PermissionRequest.RESOURCE_AUDIO_CAPTURE)) }
+            } else {
+                runCatching { pendingAudioPermissionRequest?.deny() }
+                pendingAudioPermissionRequest = request
+                audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+            }
+        }
+    }
+
+    private fun openAppPermissionsSettingsWithToast(message: String) {
+        android.widget.Toast.makeText(this, message, android.widget.Toast.LENGTH_LONG).show()
+        runCatching {
+            startActivity(
+                Intent(
+                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                    Uri.fromParts("package", packageName, null),
+                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
         }
     }
 

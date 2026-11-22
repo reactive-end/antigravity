@@ -90,11 +90,46 @@ li + li {
 input, textarea, [contenteditable="true"] {
   font-size: 16px;
 }
-/* Gemini-style minimal topbar: remove boxy border and prevent Google Bar avatar overlap */
+/* Hide Google Account & Feedback on top host while viewing a conversation */
+html.agy-in-conversation button.header-feedback-btn,
+html.agy-in-conversation button.header-feedback-btn--fullscreen,
+html.agy-in-conversation .boqOnegoogleliteOgbOneGoogleBar,
+html.agy-in-conversation .gb_Za {
+  display: none !important;
+}
+/* Gemini-style minimal topbar: Home vs Conversation */
 html body div.flex.items-center.justify-between.w-full.pl-2.gap-2.border-b {
   background-color: #000000 !important;
   border-bottom-color: transparent !important;
   min-height: 52px;
+}
+html body div.flex.items-center.justify-between.w-full.pl-2.gap-2.border-b:has(button[aria-label="Back to home"]) {
+  background-color: #0E0F12 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
+  min-height: 60px !important;
+  padding: 8px 14px !important;
+  gap: 12px !important;
+}
+html body div.flex.items-center.justify-between.w-full.pl-2.gap-2.border-b:has(button[aria-label="Back to home"]) > div.flex.items-center.shrink-0 {
+  display: none !important;
+}
+html body button[aria-label="Back to home"] {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  border-radius: 9999px !important;
+  background-color: #1E1F20 !important;
+  color: #F1F3F4 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+html body button[aria-label="Back to home"] svg {
+  width: 22px !important;
+  height: 22px !important;
 }
 html body div.relative.w-full.py-1 > button.flex.items-center.justify-between.w-full.rounded-lg {
   background-color: transparent !important;
@@ -107,9 +142,18 @@ html body div.relative.w-full.py-1 > button.flex.items-center.justify-between.w-
   color: #E3E3E3 !important;
 }
 html body nav[aria-label="Breadcrumb"] {
-  font-size: 16px;
-  font-weight: 500;
-  color: #E3E3E3;
+  font-size: 19px !important;
+  font-weight: 500 !important;
+  color: #F1F3F4 !important;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  padding-left: 4px;
+  flex: 1 1 auto;
+  max-width: none !important;
+}
+html body nav[aria-label="Breadcrumb"] * {
+  font-size: inherit !important;
+  color: inherit !important;
 }
 html body button.agy-button-icon-touch {
   width: 38px;
@@ -181,7 +225,9 @@ html body div.surface-composer-card [aria-label="Message input"] {
   padding: 6px 6px 10px 6px !important;
   color: #E3E3E3 !important;
 }
-html body div.surface-composer-card button.rounded-full:not(.agy-send-button):not([aria-label*="Select"]) {
+html body div.surface-composer-card button[aria-label="Add context"],
+html body div.surface-composer-card button[aria-label="Record voice memo"],
+html body div.surface-composer-card button[aria-label*="Agent permissions"] {
   width: 40px;
   height: 40px;
   min-width: 40px;
@@ -194,9 +240,93 @@ html body div.surface-composer-card button.rounded-full:not(.agy-send-button):no
   color: #C4C7C5;
   flex-shrink: 0;
 }
-html body div.surface-composer-card button.rounded-full:not(.agy-send-button):not([aria-label*="Select"]) svg {
+html body div.surface-composer-card button[aria-label="Add context"] svg,
+html body div.surface-composer-card button[aria-label="Record voice memo"] svg,
+html body div.surface-composer-card button[aria-label*="Agent permissions"] svg {
   width: 20px;
   height: 20px;
+}
+/* Attached image thumbnails & compact remove X badge inside composer */
+html body div.surface-composer-card img {
+  min-width: 64px;
+  min-height: 64px;
+  max-width: 84px;
+  max-height: 84px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+html body div.surface-composer-card button[aria-label*="Remove" i],
+html body div.surface-composer-card button[aria-label*="Delete" i],
+html body div.surface-composer-card button[aria-label*="Close" i],
+html body div.surface-composer-card button[aria-label*="Dismiss" i] {
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  min-height: 22px !important;
+  padding: 2px !important;
+  border-radius: 9999px !important;
+  background-color: rgba(0, 0, 0, 0.78) !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+}
+html body div.surface-composer-card button[aria-label*="Remove" i] svg,
+html body div.surface-composer-card button[aria-label*="Delete" i] svg,
+html body div.surface-composer-card button[aria-label*="Close" i] svg,
+html body div.surface-composer-card button[aria-label*="Dismiss" i] svg {
+  width: 13px !important;
+  height: 13px !important;
+}
+/* Elevated Gemini Material 3 bottom sheets, model picker & context menus */
+html body [role="dialog"],
+html body [vaul-drawer],
+html body [data-vaul-drawer],
+html body [role="menu"],
+html body [role="listbox"],
+html body [data-radix-popper-content-wrapper] > div,
+html body div.fixed.inset-x-0.bottom-0 {
+  background-color: #1E1F20 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #E3E3E3 !important;
+}
+html body [role="dialog"],
+html body [vaul-drawer],
+html body [data-vaul-drawer],
+html body div.fixed.inset-x-0.bottom-0 {
+  border-top-left-radius: 28px !important;
+  border-top-right-radius: 28px !important;
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.65) !important;
+}
+html body [role="menu"],
+html body [role="listbox"] {
+  border-radius: 20px !important;
+  padding: 8px !important;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65) !important;
+}
+html body [role="dialog"] button:not([aria-label*="Close" i]):not([aria-label*="Dismiss" i]),
+html body [role="dialog"] [role="menuitem"],
+html body [role="dialog"] [role="option"],
+html body [role="menu"] [role="menuitem"],
+html body [role="menu"] button,
+html body [role="listbox"] [role="option"],
+html body [role="listbox"] button,
+html body div.fixed.inset-x-0.bottom-0 button:not([aria-label*="Close" i]):not([aria-label*="Dismiss" i]) {
+  min-height: 48px !important;
+  padding: 10px 14px !important;
+  border-radius: 14px !important;
+  font-size: 15.5px !important;
+  gap: 14px !important;
+}
+html body [role="dialog"] button:not([aria-label*="Close" i]):not([aria-label*="Dismiss" i]) svg,
+html body [role="dialog"] [role="menuitem"] svg,
+html body [role="dialog"] [role="option"] svg,
+html body [role="menu"] svg,
+html body [role="listbox"] svg,
+html body div.fixed.inset-x-0.bottom-0 button:not([aria-label*="Close" i]):not([aria-label*="Dismiss" i]) svg {
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  min-height: 22px !important;
+  flex-shrink: 0 !important;
 }
 html body div.surface-composer-card button[aria-label*="Select model"] {
   min-height: 38px;
@@ -358,10 +488,38 @@ html body .agy-button:active {
                 targetRoot.appendChild(st);
               }
             };
+            var isConvUrl = function() {
+              try {
+                var p = location.pathname || '';
+                var s = location.search || '';
+                return p.indexOf('/c/') !== -1 || s.indexOf('p=c%2F') !== -1 || s.indexOf('p=c/') !== -1;
+              } catch (_) { return false; }
+            };
+            var syncConversationMode = function() {
+              try {
+                if (window === window.top && document.querySelector('iframe[src*="usercontent.goog"]')) {
+                  if (window.__AGY_IFRAME_CONV_MODE !== undefined) {
+                    if (document.documentElement) {
+                      document.documentElement.classList.toggle('agy-in-conversation', !!window.__AGY_IFRAME_CONV_MODE);
+                    }
+                    return;
+                  }
+                }
+                var hasBack = !!document.querySelector('button[aria-label="Back to home"]');
+                var inConv = isConvUrl() || hasBack;
+                if (document.documentElement) {
+                  document.documentElement.classList.toggle('agy-in-conversation', inConv);
+                }
+                if (window !== window.top && window.top) {
+                  try { window.top.postMessage({ __agyCmd: 'CONV_MODE', active: inConv }, '*'); } catch (_) {}
+                }
+              } catch (_) {}
+            };
             var applyAllPolish = function() {
               ensureViewport();
               var rootTarget = document.head || document.documentElement;
               if (rootTarget) upsertPolish(rootTarget);
+              syncConversationMode();
               try {
                 var allEls = document.getElementsByTagName('*');
                 for (var sIdx = 0; sIdx < allEls.length; sIdx++) {
@@ -391,6 +549,32 @@ html body .agy-button:active {
                 document.addEventListener('DOMContentLoaded', applyAllPolish, true);
                 window.addEventListener('load', applyAllPolish, true);
                 window.addEventListener('popstate', function() { setTimeout(applyAllPolish, 60); }, true);
+                window.addEventListener('message', function(e) {
+                  if (window !== window.top || !e || !e.data || e.data.__agyCmd !== 'CONV_MODE') return;
+                  window.__AGY_IFRAME_CONV_MODE = !!e.data.active;
+                  if (document.documentElement) {
+                    document.documentElement.classList.toggle('agy-in-conversation', !!e.data.active);
+                  }
+                }, false);
+                if (window.history) {
+                  var origPush = history.pushState;
+                  if (typeof origPush === 'function') {
+                    history.pushState = function() {
+                      var res = origPush.apply(this, arguments);
+                      setTimeout(syncConversationMode, 60);
+                      return res;
+                    };
+                  }
+                  var origReplace = history.replaceState;
+                  if (typeof origReplace === 'function') {
+                    history.replaceState = function() {
+                      var res = origReplace.apply(this, arguments);
+                      setTimeout(syncConversationMode, 60);
+                      return res;
+                    };
+                  }
+                }
+                setInterval(syncConversationMode, 800);
               } catch (_) {}
               try {
                 var headObserved = null;
@@ -462,11 +646,21 @@ html body .agy-button:active {
 
               var NativeNotification = function(title, options) {
                 var body = (options && options.body) ? String(options.body) : '';
+                this.title = String(title || 'Antigravity');
+                this.body = body;
+                this.tag = (options && options.tag) ? String(options.tag) : '';
+                this.data = (options && options.data !== undefined) ? options.data : null;
+                this.onclick = null;
+                this.onclose = null;
+                this.onerror = null;
+                this.onshow = null;
                 window.__AGY_CHANGED_IN_BG = false;
                 window.__AGY_WAS_BUSY_IN_BG = false;
-                emitNative(title, body);
+                emitNative(this.title, body);
               };
               NativeNotification.prototype.close = function() {};
+              NativeNotification.prototype.addEventListener = function() {};
+              NativeNotification.prototype.removeEventListener = function() {};
               Object.defineProperty(NativeNotification, 'permission', {
                 get: function() { return 'granted'; }
               });
@@ -501,7 +695,10 @@ html body .agy-button:active {
             var readDeepConversationState = function() {
               try {
                 if (!document.body) {
-                  return { sig: '', preview: 'El agente terminó de responder.', busy: false, lostConnection: false };
+                  return { sig: '', count: 0, preview: 'El agente terminó de responder.', busy: false, lostConnection: false, skip: true };
+                }
+                if (window === window.top && document.querySelector('iframe[src*="usercontent.goog"]')) {
+                  return { sig: '', count: 0, preview: '', busy: false, lostConnection: false, skip: true };
                 }
                 var chunks = [];
                 var sawBusy = false;
@@ -512,14 +709,20 @@ html body .agy-button:active {
                   if (node.nodeType === 3) {
                     var t = (node.nodeValue || '').trim();
                     if (t) {
-                      if (t === 'Working' || t === 'Thinking' || t === 'Working...' || t === 'Thinking...') {
+                      var low = t.toLowerCase();
+                      if (low === 'working' || low === 'thinking' || low === 'working...' || low === 'thinking...' || low === 'generating' || low === 'generating...') {
                         sawBusy = true;
                       } else if (t.indexOf('Lost connection to the remote instance') !== -1) {
                         lostConn = true;
                       } else if (t.length >= 2 &&
                                  !/^\d{1,2}:\d{2}/.test(t) &&
-                                 !/^\d+[smh]\s+ago$/i.test(t) &&
-                                 t !== 'now' &&
+                                 !/^\d+[smhd]\s+ago$/i.test(t) &&
+                                 !/^\d+\s+(sec|second|min|minute|hr|hour|day)s?\s+ago$/i.test(t) &&
+                                 !/^\d+[smh]$/i.test(t) &&
+                                 low !== 'now' &&
+                                 low !== 'just now' &&
+                                 low !== 'a moment ago' &&
+                                 low !== 'feedback' &&
                                  t.indexOf('Ask anything, @ to mention') === -1) {
                         chunks.push(t);
                       }
@@ -528,7 +731,15 @@ html body .agy-button:active {
                   }
                   if (node.nodeType !== 1 && node.nodeType !== 11) return;
                   var tag = (node.tagName || '').toUpperCase();
-                  if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'NOSCRIPT' || tag === 'SVG') return;
+                  if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'NOSCRIPT' || tag === 'SVG' || tag === 'HEADER' || tag === 'NAV' || tag === 'FOOTER') return;
+                  if (node.getAttribute) {
+                    var role = node.getAttribute('role');
+                    if (role === 'dialog' || role === 'menu' || role === 'listbox') return;
+                    var al = node.getAttribute('aria-label') || '';
+                    if (al === 'Message input') return;
+                  }
+                  var cn = (typeof node.className === 'string') ? node.className : '';
+                  if (cn.indexOf('surface-composer') !== -1 || cn.indexOf('boqOnegoogleliteOgbOneGoogleBar') !== -1) return;
 
                   if (tag === 'BUTTON' || (node.getAttribute && node.getAttribute('role') === 'button')) {
                     var lbl = (((node.getAttribute && node.getAttribute('aria-label')) || '') + ' ' +
@@ -567,12 +778,14 @@ html body .agy-button:active {
                 if (preview.length > 140) preview = preview.slice(0, 140) + '…';
                 return {
                   sig: sig,
+                  count: chunks.length,
                   preview: preview,
                   busy: sawBusy,
-                  lostConnection: lostConn
+                  lostConnection: lostConn,
+                  skip: false
                 };
               } catch (_) {
-                return { sig: '', preview: 'El agente terminó de responder.', busy: false, lostConnection: false };
+                return { sig: '', count: 0, preview: 'El agente terminó de responder.', busy: false, lostConnection: false, skip: true };
               }
             };
 
@@ -590,7 +803,14 @@ html body .agy-button:active {
               window.__AGY_MSG_BRIDGE_BOUND = true;
               try {
                 window.addEventListener('message', function(e) {
-                  if (window === window.top || !e || !e.data) return;
+                  if (!e || !e.data || !e.data.__agyCmd) return;
+                  if (e.data.__agyCmd === 'CONV_MODE' && window === window.top) {
+                    if (document.documentElement) {
+                      document.documentElement.classList.toggle('agy-in-conversation', !!e.data.active);
+                    }
+                    return;
+                  }
+                  if (window === window.top) return;
                   if (e.data.__agyCmd === 'SET_BG' && window.__AGY_SET_BG) {
                     window.__AGY_SET_BG(e.data.val);
                   } else if (e.data.__agyCmd === 'BG_TICK' && window.__AGY_BG_TICK) {
@@ -605,6 +825,7 @@ html body .agy-button:active {
               dispatchBgToFrames({ __agyCmd: 'SET_BG', val: !!isBg });
               var st = readDeepConversationState();
               window.__AGY_BASE_SIG = st.sig;
+              window.__AGY_BASE_COUNT = st.count;
               window.__AGY_PREV_SIG = st.sig;
               window.__AGY_WAS_BUSY_IN_BG = st.busy;
               window.__AGY_CHANGED_IN_BG = false;
@@ -615,6 +836,7 @@ html body .agy-button:active {
               dispatchBgToFrames({ __agyCmd: 'BG_TICK' });
               if (!window.__AGY_BG) return;
               var st = readDeepConversationState();
+              if (st.skip) return;
 
               if (st.busy) {
                 window.__AGY_WAS_BUSY_IN_BG = true;
@@ -624,7 +846,7 @@ html body .agy-button:active {
               }
 
               if (st.sig !== window.__AGY_PREV_SIG) {
-                if (st.sig !== window.__AGY_BASE_SIG) {
+                if (st.count > (window.__AGY_BASE_COUNT || 0) && st.sig !== window.__AGY_BASE_SIG) {
                   window.__AGY_CHANGED_IN_BG = true;
                   window.__AGY_LAST_SNIPPET = st.preview;
                 }
@@ -633,10 +855,11 @@ html body .agy-button:active {
               }
 
               if ((window.__AGY_WAS_BUSY_IN_BG || window.__AGY_CHANGED_IN_BG) && !st.busy && !st.lostConnection) {
-                if (st.sig !== window.__AGY_BASE_SIG || window.__AGY_WAS_BUSY_IN_BG) {
+                if (st.count > (window.__AGY_BASE_COUNT || 0) || window.__AGY_WAS_BUSY_IN_BG) {
                   window.__AGY_WAS_BUSY_IN_BG = false;
                   window.__AGY_CHANGED_IN_BG = false;
                   window.__AGY_BASE_SIG = st.sig;
+                  window.__AGY_BASE_COUNT = st.count;
                   emitNative('Antigravity', window.__AGY_LAST_SNIPPET || st.preview);
                 }
               }

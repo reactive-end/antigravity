@@ -56,4 +56,12 @@ class AntigravityUrlPolicyTest {
         assertTrue(origins.contains("https://*.usercontent.goog"))
         assertFalse(origins.contains("*"))
     }
+
+    @Test
+    fun trustedMediaOriginsAllowAntigravityAndUserContentOnly() {
+        assertTrue(AntigravityUrlPolicy.isTrustedMediaOrigin("antigravity.google.com"))
+        assertTrue(AntigravityUrlPolicy.isTrustedMediaOrigin("antigravity.static.usercontent.goog"))
+        assertFalse(AntigravityUrlPolicy.isTrustedMediaOrigin("evil.example.com"))
+        assertFalse(AntigravityUrlPolicy.isTrustedMediaOrigin(null))
+    }
 }
