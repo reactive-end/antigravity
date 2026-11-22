@@ -1,0 +1,10 @@
+{
+  "entry_id": "01M80GDQVQMEW0RTHF1NN6WE1S",
+  "task_id": "T-20261122-01M80GDQVN72GS89",
+  "author": "reactive-end",
+  "status": "in_progress",
+  "branch": "main",
+  "summary": "Started task: Verificar permisos de notificaciones tras foco de ventana, abrir ajustes One UI si esta bloqueado y recorrer Shadow DOM",
+  "files_touched": [],
+  "timestamp": "2026-11-22T02:12:37.401937800Z"
+}

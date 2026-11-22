@@ -72,7 +72,13 @@ class MainActivity : ComponentActivity() {
 
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
-    ) { /* Checked dynamically when posting notifications */ }
+    ) { granted ->
+        if (granted && notificationHelper.areNotificationsFullyEnabled()) {
+            sendOneTimeVerificationNotification()
+        } else {
+            openNotificationSettingsWithToast()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -87,11 +93,11 @@ class MainActivity : ComponentActivity() {
         jsBridge = AntigravityJsBridge(notificationHelper)
 
         onBackPressedDispatcher.addCallback(this, backCallback)
-        requestNotificationPermissionIfNeeded()
 
         val root = buildNativeHierarchy()
         setContentView(root)
 
+        root.postDelayed({ ensureNotificationAccessAfterWindowReady() }, 700L)
         observeNetworkRecovery()
     }
 
@@ -287,11 +293,37 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun requestNotificationPermissionIfNeeded() {
+    private fun ensureNotificationAccessAfterWindowReady() {
+        if (notificationHelper.areNotificationsFullyEnabled()) {
+            sendOneTimeVerificationNotification()
+            return
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            !notificationHelper.hasNotificationPermission()
+            !notificationHelper.hasRuntimePermission()
         ) {
             notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            openNotificationSettingsWithToast()
+        }
+    }
+
+    private fun sendOneTimeVerificationNotification() {
+        if (sessionStore.isNotifSelfTestDone()) return
+        sessionStore.markNotifSelfTestDone()
+        notificationHelper.postNativeNotification(
+            title = "Notificaciones activas",
+            body = "Antigravity te avisará cuando termine una tarea en segundo plano.",
+        )
+    }
+
+    private fun openNotificationSettingsWithToast() {
+        android.widget.Toast.makeText(
+            this,
+            "Activa las notificaciones de Antigravity para recibir avisos al salir de la app",
+            android.widget.Toast.LENGTH_LONG,
+        ).show()
+        runCatching {
+            startActivity(notificationHelper.buildNotificationSettingsIntent())
         }
     }
 

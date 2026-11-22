@@ -21,8 +21,16 @@ class SessionStore(context: Context) {
         prefs.edit().putString(KEY_LAST_URL, url).apply()
     }
 
+    fun isNotifSelfTestDone(): Boolean =
+        prefs.getBoolean(KEY_NOTIF_TEST_DONE, false)
+
+    fun markNotifSelfTestDone() {
+        prefs.edit().putBoolean(KEY_NOTIF_TEST_DONE, true).apply()
+    }
+
     companion object {
         private const val PREFS_NAME = "antigravity_session"
         private const val KEY_LAST_URL = "last_visited_url"
+        private const val KEY_NOTIF_TEST_DONE = "notif_self_test_v2"
     }
 }

@@ -7,7 +7,9 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -22,7 +24,6 @@ class NotificationHelper(private val context: Context) {
     fun ensureChannels() {
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        // Clean up any legacy persistent background notification/channel from previous builds.
         runCatching {
             manager.cancel(LEGACY_KEEPALIVE_NOTIFICATION_ID)
             manager.deleteNotificationChannel(LEGACY_KEEPALIVE_CHANNEL_ID)
@@ -39,7 +40,7 @@ class NotificationHelper(private val context: Context) {
         manager.createNotificationChannel(alertsChannel)
     }
 
-    fun hasNotificationPermission(): Boolean {
+    fun hasRuntimePermission(): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return true
         return ContextCompat.checkSelfPermission(
             context,
@@ -47,8 +48,30 @@ class NotificationHelper(private val context: Context) {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
+    fun areNotificationsFullyEnabled(): Boolean {
+        if (!hasRuntimePermission()) return false
+        val compat = NotificationManagerCompat.from(context)
+        if (!compat.areNotificationsEnabled()) return false
+        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val ch = manager.getNotificationChannel(CHANNEL_ALERTS_ID)
+        return ch == null || ch.importance != NotificationManager.IMPORTANCE_NONE
+    }
+
+    fun buildNotificationSettingsIntent(): Intent {
+        return Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+            putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }.takeIf { it.resolveActivity(context.packageManager) != null }
+            ?: Intent(
+                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                Uri.fromParts("package", context.packageName, null),
+            ).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+    }
+
     fun postNativeNotification(title: String, body: String) {
-        if (!hasNotificationPermission()) return
+        if (!areNotificationsFullyEnabled()) return
         ensureChannels()
 
         val cleanTitle = title.trim().ifEmpty { "Antigravity" }

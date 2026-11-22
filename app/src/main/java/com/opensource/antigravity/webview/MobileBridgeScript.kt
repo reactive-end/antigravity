@@ -34,17 +34,19 @@ object MobileBridgeScript {
               document.head.appendChild(style);
             }
 
-            if (!window.__AGY_NOTIF_BRIDGE && window.AntigravityNativeBridge) {
-              window.__AGY_NOTIF_BRIDGE = true;
-              window.__AGY_BG = false;
-              var baselineSig = '';
-              var prevTickSig = '';
-              var wasBusyInBg = false;
-              var hasChangedInBg = false;
-              var lastSnippet = '';
+            if (!window.AntigravityNativeBridge) return;
 
-              // CRITICAL: Never let Antigravity Remote know the tab went to background,
-              // otherwise its JS client disconnects from the remote PC instance!
+            var emitNative = function(title, body) {
+              try {
+                window.AntigravityNativeBridge.notify(
+                  String(title || 'Antigravity'),
+                  String(body || 'El agente terminó de responder.')
+                );
+              } catch (_) {}
+            };
+
+            if (!window.__AGY_VISIBILITY_LOCKED) {
+              window.__AGY_VISIBILITY_LOCKED = true;
               try {
                 Object.defineProperty(document, 'hidden', { configurable: true, get: function() { return false; } });
                 Object.defineProperty(document, 'visibilityState', { configurable: true, get: function() { return 'visible'; } });
@@ -66,20 +68,10 @@ object MobileBridgeScript {
                 document.addEventListener('visibilitychange', function(e) { e.stopImmediatePropagation(); }, true);
               } catch (_) {}
 
-              var emitNative = function(title, body) {
-                try {
-                  window.AntigravityNativeBridge.notify(
-                    String(title || 'Antigravity'),
-                    String(body || 'El agente terminó de responder.')
-                  );
-                } catch (_) {}
-              };
-
-              // 1. Intercept window.Notification API
               var NativeNotification = function(title, options) {
                 var body = (options && options.body) ? String(options.body) : '';
-                hasChangedInBg = false;
-                wasBusyInBg = false;
+                window.__AGY_CHANGED_IN_BG = false;
+                window.__AGY_WAS_BUSY_IN_BG = false;
                 emitNative(title, body);
               };
               NativeNotification.prototype.close = function() {};
@@ -92,18 +84,16 @@ object MobileBridgeScript {
               };
               try { window.Notification = NativeNotification; } catch (_) {}
 
-              // 2. Intercept ServiceWorkerRegistration.showNotification
               if (window.ServiceWorkerRegistration && window.ServiceWorkerRegistration.prototype) {
                 window.ServiceWorkerRegistration.prototype.showNotification = function(title, options) {
                   var body = (options && options.body) ? String(options.body) : '';
-                  hasChangedInBg = false;
-                  wasBusyInBg = false;
+                  window.__AGY_CHANGED_IN_BG = false;
+                  window.__AGY_WAS_BUSY_IN_BG = false;
                   emitNative(title, body);
                   return Promise.resolve();
                 };
               }
 
-              // 3. Report notifications permission as granted via Permissions API
               if (navigator.permissions && typeof navigator.permissions.query === 'function') {
                 var origQuery = navigator.permissions.query.bind(navigator.permissions);
                 navigator.permissions.query = function(desc) {
@@ -113,104 +103,123 @@ object MobileBridgeScript {
                   return origQuery(desc);
                 };
               }
-
-              // Helper: detect if the agent is currently working ("Working" label or red stop button)
-              var readConversationState = function() {
-                try {
-                  var raw = (document.body && document.body.innerText) ? document.body.innerText : '';
-                  var lines = raw.split('\n');
-                  var cleanLines = [];
-                  var sawWorkingLine = false;
-                  var lostConnection = raw.indexOf('Lost connection to the remote instance') !== -1;
-
-                  for (var i = 0; i < lines.length; i++) {
-                    var ln = lines[i].trim();
-                    if (!ln) continue;
-                    if (ln === 'Working' || ln === 'Thinking' || ln === 'Thinking...' || ln === 'Working...') {
-                      sawWorkingLine = true;
-                      continue;
-                    }
-                    if (ln.indexOf('Lost connection to the remote instance') !== -1 ||
-                        ln.indexOf('Please wait a minute or refresh') !== -1 ||
-                        ln.indexOf('Ask anything, @ to mention') !== -1) {
-                      continue;
-                    }
-                    if (/^\d{1,2}:\d{2}/.test(ln) || /^\d+[smh]\s+ago$/i.test(ln) || ln === 'now') continue;
-                    if (ln.length >= 2) cleanLines.push(ln);
-                  }
-
-                  var hasStopBtn = false;
-                  var btns = document.querySelectorAll('button, [role="button"]');
-                  for (var j = 0; j < btns.length; j++) {
-                    var b = btns[j];
-                    if (b.disabled) continue;
-                    var label = ((b.getAttribute('aria-label') || '') + ' ' + (b.getAttribute('title') || '') + ' ' + (b.textContent || '')).toLowerCase();
-                    if (label.indexOf('stop') !== -1 || label.indexOf('detener') !== -1 || label.indexOf('cancel') !== -1) {
-                      hasStopBtn = true;
-                      break;
-                    }
-                  }
-
-                  var tail = cleanLines.slice(-10);
-                  var sig = cleanLines.length + ':' + tail.join('|');
-                  var preview = tail.length > 0 ? tail[tail.length - 1] : 'El agente terminó de responder.';
-                  if (preview.length > 140) preview = preview.slice(0, 140) + '…';
-                  return {
-                    sig: sig,
-                    preview: preview,
-                    busy: sawWorkingLine || hasStopBtn,
-                    lostConnection: lostConnection
-                  };
-                } catch (_) {
-                  return { sig: '', preview: 'El agente terminó de responder.', busy: false, lostConnection: false };
-                }
-              };
-
-              // 4. Called from Android native onStart/onStop
-              window.__AGY_SET_BG = function(isBg) {
-                window.__AGY_BG = !!isBg;
-                var st = readConversationState();
-                baselineSig = st.sig;
-                prevTickSig = st.sig;
-                wasBusyInBg = st.busy;
-                hasChangedInBg = false;
-                lastSnippet = st.preview;
-              };
-
-              // 5. Pumped every 1.5s by Android native Handler while app is in background
-              window.__AGY_BG_TICK = function() {
-                if (!window.__AGY_BG) return;
-                var st = readConversationState();
-
-                if (st.busy) {
-                  wasBusyInBg = true;
-                  prevTickSig = st.sig;
-                  lastSnippet = st.preview;
-                  return;
-                }
-
-                if (st.sig !== prevTickSig) {
-                  if (st.sig !== baselineSig) {
-                    hasChangedInBg = true;
-                    lastSnippet = st.preview;
-                  }
-                  prevTickSig = st.sig;
-                  return;
-                }
-
-                // Trigger notification when either:
-                // A) The agent was in "Working" state while in background and just finished (!st.busy), OR
-                // B) New conversation text arrived in background and settled across ticks
-                if ((wasBusyInBg || hasChangedInBg) && !st.busy && !st.lostConnection) {
-                  if (st.sig !== baselineSig || wasBusyInBg) {
-                    wasBusyInBg = false;
-                    hasChangedInBg = false;
-                    baselineSig = st.sig;
-                    emitNative('Antigravity', lastSnippet || st.preview);
-                  }
-                }
-              };
             }
+
+            // Deep walker that traverses both regular DOM and all open Shadow Roots
+            var readDeepConversationState = function() {
+              try {
+                var chunks = [];
+                var sawBusy = false;
+                var lostConn = false;
+
+                var walk = function(node) {
+                  if (!node) return;
+                  if (node.nodeType === 3) {
+                    var t = (node.nodeValue || '').trim();
+                    if (t) {
+                      if (t === 'Working' || t === 'Thinking' || t === 'Working...' || t === 'Thinking...') {
+                        sawBusy = true;
+                      } else if (t.indexOf('Lost connection to the remote instance') !== -1) {
+                        lostConn = true;
+                      } else if (t.length >= 2 &&
+                                 !/^\d{1,2}:\d{2}/.test(t) &&
+                                 !/^\d+[smh]\s+ago$/i.test(t) &&
+                                 t !== 'now' &&
+                                 t.indexOf('Ask anything, @ to mention') === -1) {
+                        chunks.push(t);
+                      }
+                    }
+                    return;
+                  }
+                  if (node.nodeType !== 1 && node.nodeType !== 11) return;
+                  var tag = (node.tagName || '').toUpperCase();
+                  if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'NOSCRIPT' || tag === 'SVG') return;
+
+                  if (tag === 'BUTTON' || (node.getAttribute && node.getAttribute('role') === 'button')) {
+                    var lbl = (((node.getAttribute && node.getAttribute('aria-label')) || '') + ' ' +
+                               ((node.getAttribute && node.getAttribute('title')) || '')).toLowerCase();
+                    if (lbl.indexOf('stop') !== -1 || lbl.indexOf('detener') !== -1 || lbl.indexOf('cancel') !== -1) {
+                      sawBusy = true;
+                    }
+                  }
+
+                  if (node.shadowRoot) {
+                    walk(node.shadowRoot);
+                  }
+                  var children = node.childNodes;
+                  if (children) {
+                    for (var i = 0; i < children.length; i++) {
+                      walk(children[i]);
+                    }
+                  }
+                };
+
+                walk(document.body);
+
+                var tail = chunks.slice(-14);
+                var sig = chunks.length + ':' + tail.join('|');
+                var preview = 'El agente terminó de responder.';
+                for (var k = tail.length - 1; k >= 0; k--) {
+                  var candidate = tail[k];
+                  if (candidate.length > 4 &&
+                      candidate !== 'Review' &&
+                      candidate.indexOf('Gemini ') !== 0 &&
+                      candidate.indexOf('files changed') === -1) {
+                    preview = candidate;
+                    break;
+                  }
+                }
+                if (preview.length > 140) preview = preview.slice(0, 140) + '…';
+                return {
+                  sig: sig,
+                  preview: preview,
+                  busy: sawBusy,
+                  lostConnection: lostConn
+                };
+              } catch (_) {
+                return { sig: '', preview: 'El agente terminó de responder.', busy: false, lostConnection: false };
+              }
+            };
+
+            window.__AGY_SET_BG = function(isBg) {
+              window.__AGY_BG = !!isBg;
+              var st = readDeepConversationState();
+              window.__AGY_BASE_SIG = st.sig;
+              window.__AGY_PREV_SIG = st.sig;
+              window.__AGY_WAS_BUSY_IN_BG = st.busy;
+              window.__AGY_CHANGED_IN_BG = false;
+              window.__AGY_LAST_SNIPPET = st.preview;
+            };
+
+            window.__AGY_BG_TICK = function() {
+              if (!window.__AGY_BG) return;
+              var st = readDeepConversationState();
+
+              if (st.busy) {
+                window.__AGY_WAS_BUSY_IN_BG = true;
+                window.__AGY_PREV_SIG = st.sig;
+                window.__AGY_LAST_SNIPPET = st.preview;
+                return;
+              }
+
+              if (st.sig !== window.__AGY_PREV_SIG) {
+                if (st.sig !== window.__AGY_BASE_SIG) {
+                  window.__AGY_CHANGED_IN_BG = true;
+                  window.__AGY_LAST_SNIPPET = st.preview;
+                }
+                window.__AGY_PREV_SIG = st.sig;
+                return;
+              }
+
+              if ((window.__AGY_WAS_BUSY_IN_BG || window.__AGY_CHANGED_IN_BG) && !st.busy && !st.lostConnection) {
+                if (st.sig !== window.__AGY_BASE_SIG || window.__AGY_WAS_BUSY_IN_BG) {
+                  window.__AGY_WAS_BUSY_IN_BG = false;
+                  window.__AGY_CHANGED_IN_BG = false;
+                  window.__AGY_BASE_SIG = st.sig;
+                  emitNative('Antigravity', window.__AGY_LAST_SNIPPET || st.preview);
+                }
+              }
+            };
           } catch (_) {}
         })();
     """

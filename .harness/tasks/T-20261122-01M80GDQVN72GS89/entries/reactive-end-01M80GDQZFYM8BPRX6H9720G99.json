@@ -1,0 +1,15 @@
+{
+  "entry_id": "01M80GDQZFYM8BPRX6H9720G99",
+  "task_id": "T-20261122-01M80GDQVN72GS89",
+  "author": "reactive-end",
+  "status": "done",
+  "branch": "main",
+  "summary": "Solicitud de permiso diferida tras foco de ventana, redireccion automatica a ACTION_APP_NOTIFICATION_SETTINGS si esta deshabilitado, notificacion unica de autodiagnostico al iniciar y walker recursivo de Shadow DOM",
+  "files_touched": [
+    "app/src/main/java/com/opensource/antigravity/MainActivity.kt",
+    "app/src/main/java/com/opensource/antigravity/data/SessionStore.kt",
+    "app/src/main/java/com/opensource/antigravity/notifications/NotificationHelper.kt",
+    "app/src/main/java/com/opensource/antigravity/webview/MobileBridgeScript.kt"
+  ],
+  "timestamp": "2026-11-22T02:12:37.523873500Z"
+}
