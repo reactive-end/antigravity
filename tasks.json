@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "task_count": 8,
-  "updated_at": "2026-11-22T03:00:57.185702200Z",
+  "task_count": 9,
+  "updated_at": "2026-11-22T03:15:33.669249300Z",
   "tasks": [
     {
       "task_id": "T-20261122-01M80BH9P51EZEAG",
@@ -410,6 +410,45 @@
             "README.md"
           ],
           "timestamp": "2026-11-22T03:00:57.185702200Z"
+        }
+      ]
+    },
+    {
+      "task_id": "T-20261122-01M80M0S65ZV53C6",
+      "request": "Ampliar objetivos tactiles y mejorar contraste movil CSS en WebView (v1.2.0)",
+      "status": "done",
+      "created_by": "reactive-end",
+      "contributors": [
+        "reactive-end"
+      ],
+      "branches": [
+        "main"
+      ],
+      "files_touched": [],
+      "summary": "Aplicados overrides CSS moviles (tokens Onyx, controles 38-44px, Select model truncado, reinyeccion SPA y Shadow DOM), unit tests y APK v1.2.0 compilado.",
+      "entry_count": 2,
+      "created_at": "2026-11-22T03:15:27.045038400Z",
+      "updated_at": "2026-11-22T03:15:33.669249300Z",
+      "entries": [
+        {
+          "entry_id": "01M80M0S66ZH31S6M85C8J6SPD",
+          "task_id": "T-20261122-01M80M0S65ZV53C6",
+          "author": "reactive-end",
+          "status": "in_progress",
+          "branch": "main",
+          "summary": "Started task: Ampliar objetivos tactiles y mejorar contraste movil CSS en WebView (v1.2.0)",
+          "files_touched": [],
+          "timestamp": "2026-11-22T03:15:27.082266500Z"
+        },
+        {
+          "entry_id": "01M80M0ZM29ZFPKAV507810EVV",
+          "task_id": "T-20261122-01M80M0S65ZV53C6",
+          "author": "reactive-end",
+          "status": "done",
+          "branch": "main",
+          "summary": "Aplicados overrides CSS moviles (tokens Onyx, controles 38-44px, Select model truncado, reinyeccion SPA y Shadow DOM), unit tests y APK v1.2.0 compilado.",
+          "files_touched": [],
+          "timestamp": "2026-11-22T03:15:33.669249300Z"
         }
       ]
     }

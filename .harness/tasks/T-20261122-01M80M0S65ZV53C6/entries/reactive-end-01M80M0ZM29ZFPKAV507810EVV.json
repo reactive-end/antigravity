@@ -1,0 +1,10 @@
+{
+  "entry_id": "01M80M0ZM29ZFPKAV507810EVV",
+  "task_id": "T-20261122-01M80M0S65ZV53C6",
+  "author": "reactive-end",
+  "status": "done",
+  "branch": "main",
+  "summary": "Aplicados overrides CSS moviles (tokens Onyx, controles 38-44px, Select model truncado, reinyeccion SPA y Shadow DOM), unit tests y APK v1.2.0 compilado.",
+  "files_touched": [],
+  "timestamp": "2026-11-22T03:15:33.669249300Z"
+}

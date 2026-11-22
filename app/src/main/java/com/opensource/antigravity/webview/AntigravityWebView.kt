@@ -144,6 +144,19 @@ object AntigravityWebViewFactory {
                 callbacks.onNavigationStateChanged(url, view.canGoBack())
                 if (AntigravityUrlPolicy.isAntigravityWorkspaceUrl(url)) {
                     view.evaluateJavascript(MobileBridgeScript.INJECT_SCRIPT, null)
+                    view.postDelayed({
+                        view.evaluateJavascript(MobileBridgeScript.INJECT_SCRIPT, null)
+                    }, 800L)
+                }
+            }
+
+            override fun doUpdateVisitedHistory(view: WebView, url: String, isReload: Boolean) {
+                super.doUpdateVisitedHistory(view, url, isReload)
+                if (AntigravityUrlPolicy.isAntigravityWorkspaceUrl(url)) {
+                    view.evaluateJavascript(MobileBridgeScript.INJECT_SCRIPT, null)
+                    view.postDelayed({
+                        view.evaluateJavascript(MobileBridgeScript.INJECT_SCRIPT, null)
+                    }, 350L)
                 }
             }
 

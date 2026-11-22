@@ -2,7 +2,174 @@ package com.opensource.antigravity.webview
 
 object MobileBridgeScript {
 
-    const val INJECT_SCRIPT: String = """
+    const val MOBILE_POLISH_CSS: String = """
+:root, html, body {
+  color-scheme: dark;
+  --background: #050507;
+  --onyx-frame: #0A0A0E;
+  --onyx-well: #101015;
+  --card: #14141A;
+  --onyx-raised: #181821;
+  --onyx-selected: #21222B;
+  --onyx-key: #272933;
+  --border: rgba(255, 255, 255, 0.08);
+  --card-border: rgba(255, 255, 255, 0.13);
+  --ga-control-height-xs: 34px;
+  --ga-control-height-sm: 40px;
+  --ga-control-height-md: 44px;
+  --ga-radius-md: 10px;
+  --ga-radius-lg: 12px;
+  --ga-radius-xl: 14px;
+}
+*, *::before, *::after {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+html, body {
+  max-width: 100vw;
+  overflow-x: clip;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  overscroll-behavior-y: contain;
+}
+pre, table {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+code {
+  word-break: break-word;
+}
+p code, li code {
+  padding: 2px 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+pre code {
+  word-break: normal;
+}
+p, li {
+  line-height: 1.55;
+}
+li + li {
+  margin-top: 4px;
+}
+input, textarea, [contenteditable="true"] {
+  font-size: 16px;
+}
+/* Comfortable touch targets for tiny Antigravity icon buttons (20-28px -> 38-40px) */
+html body button.agy-button-icon-sm,
+html body .agy-button-icon-sm,
+html body button.header-feedback-btn,
+html body button[aria-label="Add context"],
+html body button[aria-label*="Agent permissions"],
+html body button.agy-send-button,
+html body button.w-7.h-7,
+html body button.w-6.h-6,
+html body button.p-1\.5.rounded-full,
+html body button.p-1.rounded-full {
+  min-width: 40px;
+  min-height: 40px;
+  width: 40px;
+  height: 40px;
+  padding: 8px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+html body button.agy-button-icon-sm,
+html body .agy-button-icon-sm,
+html body button.header-feedback-btn {
+  min-width: 38px;
+  width: 38px;
+}
+html body button.agy-button-icon-sm svg,
+html body .agy-button-icon-sm svg,
+html body button.header-feedback-btn svg,
+html body button[aria-label="Add context"] svg,
+html body button[aria-label*="Agent permissions"] svg,
+html body button.agy-send-button svg,
+html body button.w-7.h-7 svg,
+html body button.w-6.h-6 svg,
+html body button.p-1\.5.rounded-full svg,
+html body button.p-1.rounded-full svg,
+html body button.agy-button-icon-sm .mat-icon,
+html body button[aria-label="Add context"] .mat-icon {
+  width: 20px;
+  height: 20px;
+  font-size: 20px;
+}
+/* High-contrast visible send/stop and action capsules */
+html body button.agy-send-button {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+html body button[aria-label*="Select model"] {
+  min-height: 40px;
+  height: auto;
+  padding: 6px 12px;
+  font-size: 14px;
+  gap: 6px;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  min-width: 0;
+  flex-shrink: 1;
+  max-width: 44vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html body .agy-button-custom,
+html body a.agy-button-custom,
+html body button.agy-button:not(.agy-button-icon-sm) {
+  min-height: 40px;
+  padding-left: 12px;
+  padding-right: 12px;
+  border-radius: 10px;
+}
+html body a.gb_C {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+/* Header icon spacing on narrow mobile viewports */
+html body header button,
+html body header a[role="button"] {
+  min-height: 38px;
+}
+html body button,
+html body [role="button"],
+html body .agy-button {
+  transition: transform 80ms ease, opacity 80ms ease;
+}
+html body button:active,
+html body [role="button"]:active,
+html body .agy-button:active {
+  opacity: 0.76;
+  transform: scale(0.96);
+}
+::-webkit-scrollbar {
+  width: 3px;
+  height: 3px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(138, 143, 158, 0.28);
+  border-radius: 3px;
+}
+"""
+
+    val INJECT_SCRIPT: String = run {
+        val escapedCss = MOBILE_POLISH_CSS
+            .replace("\\", "\\\\")
+            .replace("`", "\\`")
+            .replace("\${", "\\\${")
+        """
         (function() {
           try {
             var vp = document.querySelector('meta[name="viewport"]');
@@ -17,22 +184,26 @@ object MobileBridgeScript {
             }
 
             var styleId = 'antigravity-mobile-polish';
-            if (!document.getElementById(styleId) && document.head) {
-              var style = document.createElement('style');
-              style.id = styleId;
-              style.textContent = [
-                ':root { color-scheme: dark; }',
-                '*, *::before, *::after { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }',
-                'html, body { max-width: 100vw; overflow-x: clip; -webkit-tap-highlight-color: transparent; touch-action: manipulation; overscroll-behavior-y: contain; }',
-                'pre, table { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }',
-                'code { word-break: break-word; }',
-                'pre code { word-break: normal; }',
-                'input, textarea, [contenteditable="true"] { font-size: 16px; }',
-                '::-webkit-scrollbar { width: 3px; height: 3px; }',
-                '::-webkit-scrollbar-thumb { background: rgba(138,143,158,0.28); border-radius: 3px; }'
-              ].join('\n');
-              document.head.appendChild(style);
-            }
+            var cssText = `$escapedCss`;
+            var upsertPolish = function(targetRoot) {
+              if (!targetRoot) return;
+              var st = targetRoot.getElementById ? targetRoot.getElementById(styleId) : targetRoot.querySelector('#' + styleId);
+              if (!st) {
+                st = document.createElement('style');
+                st.id = styleId;
+              }
+              if (st.textContent !== cssText) {
+                st.textContent = cssText;
+              }
+              targetRoot.appendChild(st);
+            };
+            if (document.head) upsertPolish(document.head);
+            try {
+              var allEls = document.getElementsByTagName('*');
+              for (var sIdx = 0; sIdx < allEls.length; sIdx++) {
+                if (allEls[sIdx].shadowRoot) upsertPolish(allEls[sIdx].shadowRoot);
+              }
+            } catch (_) {}
 
             if (!window.AntigravityNativeBridge) return;
 
@@ -222,5 +393,6 @@ object MobileBridgeScript {
             };
           } catch (_) {}
         })();
-    """
+        """.trimIndent()
+    }
 }
