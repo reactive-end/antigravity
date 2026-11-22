@@ -31,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.opensource.antigravity.data.NetworkMonitor
 import com.opensource.antigravity.data.SessionStore
+import com.opensource.antigravity.notifications.AntigravityKeepAliveService
 import com.opensource.antigravity.notifications.NotificationHelper
 import com.opensource.antigravity.ui.components.CosmicProgressBar
 import com.opensource.antigravity.ui.components.ErrorStateView
@@ -42,6 +43,7 @@ import com.opensource.antigravity.webview.AntigravityUrlPolicy
 import com.opensource.antigravity.webview.AntigravityWebView
 import com.opensource.antigravity.webview.SessionManager
 import com.opensource.antigravity.webview.WebViewCallbacks
+import com.opensource.antigravity.webview.WebViewHost
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -74,10 +76,11 @@ class MainActivity : ComponentActivity() {
 
         sessionStore = SessionStore(applicationContext)
         networkMonitor = NetworkMonitor(applicationContext)
-        notificationHelper = NotificationHelper(applicationContext).apply { ensureChannel() }
+        notificationHelper = NotificationHelper(applicationContext).apply { ensureChannels() }
         jsBridge = AntigravityJsBridge(notificationHelper)
 
         requestNotificationPermissionIfNeeded()
+        AntigravityKeepAliveService.start(applicationContext)
 
         setContent {
             val isOnline by networkMonitor.isOnline.collectAsState(
@@ -105,6 +108,12 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        WebViewHost.isInBackground = false
+        WebViewHost.keepAliveTick()
+    }
+
     override fun onPause() {
         super.onPause()
         SessionManager.flush()
@@ -112,7 +121,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onStop() {
         super.onStop()
+        WebViewHost.isInBackground = true
         SessionManager.flush()
+        WebViewHost.keepAliveTick()
     }
 
     private fun requestNotificationPermissionIfNeeded() {

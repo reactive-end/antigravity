@@ -1,0 +1,10 @@
+{
+  "entry_id": "01M80EP0KQ3C5NM9EMNJMTV4A8",
+  "task_id": "T-20261122-01M80EP0KPCSM6TJ",
+  "author": "reactive-end",
+  "status": "in_progress",
+  "branch": "main",
+  "summary": "Started task: Mantener WebView vivo en segundo plano y corregir notificaciones al salir de la app",
+  "files_touched": [],
+  "timestamp": "2026-11-22T01:42:11.355480200Z"
+}

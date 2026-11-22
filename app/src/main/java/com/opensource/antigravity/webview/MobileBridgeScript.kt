@@ -35,10 +35,21 @@ object MobileBridgeScript {
 
             if (!window.__AGY_NOTIF_BRIDGE && window.AntigravityNativeBridge) {
               window.__AGY_NOTIF_BRIDGE = true;
+              var lastExplicitNotifMs = 0;
+
+              var emitNative = function(title, body) {
+                lastExplicitNotifMs = Date.now();
+                try {
+                  window.AntigravityNativeBridge.notify(String(title || 'Antigravity'), String(body || ''));
+                } catch (_) {}
+              };
+
+              // 1. Intercept window.Notification API
               var NativeNotification = function(title, options) {
                 var body = (options && options.body) ? String(options.body) : '';
-                window.AntigravityNativeBridge.notify(String(title || 'Antigravity'), body);
+                emitNative(title, body);
               };
+              NativeNotification.prototype.close = function() {};
               Object.defineProperty(NativeNotification, 'permission', {
                 get: function() { return 'granted'; }
               });
@@ -47,6 +58,62 @@ object MobileBridgeScript {
                 return Promise.resolve('granted');
               };
               try { window.Notification = NativeNotification; } catch (_) {}
+
+              // 2. Intercept ServiceWorkerRegistration.showNotification (used by Google PWAs)
+              if (window.ServiceWorkerRegistration && window.ServiceWorkerRegistration.prototype) {
+                var origSwShow = window.ServiceWorkerRegistration.prototype.showNotification;
+                window.ServiceWorkerRegistration.prototype.showNotification = function(title, options) {
+                  var body = (options && options.body) ? String(options.body) : '';
+                  emitNative(title, body);
+                  if (typeof origSwShow === 'function') {
+                    return Promise.resolve();
+                  }
+                  return Promise.resolve();
+                };
+              }
+
+              // 3. Report notifications permission as granted via Permissions API
+              if (navigator.permissions && typeof navigator.permissions.query === 'function') {
+                var origQuery = navigator.permissions.query.bind(navigator.permissions);
+                navigator.permissions.query = function(desc) {
+                  if (desc && desc.name === 'notifications') {
+                    return Promise.resolve({ state: 'granted', onchange: null, addEventListener: function(){}, removeEventListener: function(){} });
+                  }
+                  return origQuery(desc);
+                };
+              }
+
+              // 4. Fallback: when app is in background, catch completion chimes or title alerts
+              if (window.HTMLMediaElement && window.HTMLMediaElement.prototype) {
+                var origPlay = window.HTMLMediaElement.prototype.play;
+                window.HTMLMediaElement.prototype.play = function() {
+                  try {
+                    if (window.AntigravityNativeBridge.isInBackground() && Date.now() - lastExplicitNotifMs > 3000) {
+                      emitNative('Antigravity', 'Una tarea terminó o requiere tu atención.');
+                    }
+                  } catch (_) {}
+                  return origPlay.apply(this, arguments);
+                };
+              }
+
+              var lastTitle = document.title || '';
+              if (typeof MutationObserver === 'function' && document.head) {
+                var titleObserver = new MutationObserver(function() {
+                  var nextTitle = document.title || '';
+                  if (nextTitle && nextTitle !== lastTitle) {
+                    lastTitle = nextTitle;
+                    try {
+                      if (window.AntigravityNativeBridge.isInBackground() &&
+                          Date.now() - lastExplicitNotifMs > 3000 &&
+                          nextTitle !== 'Google Antigravity' &&
+                          nextTitle !== 'Antigravity') {
+                        emitNative('Antigravity', nextTitle);
+                      }
+                    } catch (_) {}
+                  }
+                });
+                titleObserver.observe(document.head, { subtree: true, characterData: true, childList: true });
+              }
             }
           } catch (_) {}
         })();

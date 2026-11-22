@@ -1,0 +1,20 @@
+{
+  "entry_id": "01M80EP0QN4TQXKJVBKWE826TA",
+  "task_id": "T-20261122-01M80EP0KPCSM6TJ",
+  "author": "reactive-end",
+  "status": "done",
+  "branch": "main",
+  "summary": "Corregidas notificaciones en segundo plano con AntigravityKeepAliveService silencioso, WebViewHost persistente, icono monocromo ic_stat_antigravity e intercepcion de Notification + ServiceWorkerRegistration.showNotification + Permissions API",
+  "files_touched": [
+    "app/src/main/AndroidManifest.xml",
+    "app/src/main/java/com/opensource/antigravity/MainActivity.kt",
+    "app/src/main/java/com/opensource/antigravity/notifications/AntigravityKeepAliveService.kt",
+    "app/src/main/java/com/opensource/antigravity/notifications/NotificationHelper.kt",
+    "app/src/main/java/com/opensource/antigravity/webview/AntigravityJsBridge.kt",
+    "app/src/main/java/com/opensource/antigravity/webview/AntigravityWebView.kt",
+    "app/src/main/java/com/opensource/antigravity/webview/MobileBridgeScript.kt",
+    "app/src/main/java/com/opensource/antigravity/webview/WebViewHost.kt",
+    "app/src/main/res/drawable/ic_stat_antigravity.xml"
+  ],
+  "timestamp": "2026-11-22T01:42:11.481452600Z"
+}

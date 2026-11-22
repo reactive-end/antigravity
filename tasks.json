@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "task_count": 3,
-  "updated_at": "2026-11-22T01:16:40.560202500Z",
+  "task_count": 4,
+  "updated_at": "2026-11-22T01:42:11.481452600Z",
   "tasks": [
     {
       "task_id": "T-20261122-01M80BH9P51EZEAG",
@@ -145,6 +145,65 @@
             "app/src/test/java/com/opensource/antigravity/AntigravityUrlPolicyTest.kt"
           ],
           "timestamp": "2026-11-22T01:16:40.560202500Z"
+        }
+      ]
+    },
+    {
+      "task_id": "T-20261122-01M80EP0KPCSM6TJ",
+      "request": "Mantener WebView vivo en segundo plano y corregir notificaciones al salir de la app",
+      "status": "done",
+      "created_by": "reactive-end",
+      "contributors": [
+        "reactive-end"
+      ],
+      "branches": [
+        "main"
+      ],
+      "files_touched": [
+        "app/src/main/AndroidManifest.xml",
+        "app/src/main/java/com/opensource/antigravity/MainActivity.kt",
+        "app/src/main/java/com/opensource/antigravity/notifications/AntigravityKeepAliveService.kt",
+        "app/src/main/java/com/opensource/antigravity/notifications/NotificationHelper.kt",
+        "app/src/main/java/com/opensource/antigravity/webview/AntigravityJsBridge.kt",
+        "app/src/main/java/com/opensource/antigravity/webview/AntigravityWebView.kt",
+        "app/src/main/java/com/opensource/antigravity/webview/MobileBridgeScript.kt",
+        "app/src/main/java/com/opensource/antigravity/webview/WebViewHost.kt",
+        "app/src/main/res/drawable/ic_stat_antigravity.xml"
+      ],
+      "summary": "Corregidas notificaciones en segundo plano con AntigravityKeepAliveService silencioso, WebViewHost persistente, icono monocromo ic_stat_antigravity e intercepcion de Notification + ServiceWorkerRegistration.showNotification + Permissions API",
+      "entry_count": 2,
+      "created_at": "2026-11-22T01:42:11.318556400Z",
+      "updated_at": "2026-11-22T01:42:11.481452600Z",
+      "entries": [
+        {
+          "entry_id": "01M80EP0KQ3C5NM9EMNJMTV4A8",
+          "task_id": "T-20261122-01M80EP0KPCSM6TJ",
+          "author": "reactive-end",
+          "status": "in_progress",
+          "branch": "main",
+          "summary": "Started task: Mantener WebView vivo en segundo plano y corregir notificaciones al salir de la app",
+          "files_touched": [],
+          "timestamp": "2026-11-22T01:42:11.355480200Z"
+        },
+        {
+          "entry_id": "01M80EP0QN4TQXKJVBKWE826TA",
+          "task_id": "T-20261122-01M80EP0KPCSM6TJ",
+          "author": "reactive-end",
+          "status": "done",
+          "branch": "main",
+          "summary": "Corregidas notificaciones en segundo plano con AntigravityKeepAliveService silencioso, WebViewHost persistente, icono monocromo ic_stat_antigravity e intercepcion de Notification + ServiceWorkerRegistration.showNotification + Permissions API",
+          "files_touched": [
+            "app/src/main/AndroidManifest.xml",
+            "app/src/main/java/com/opensource/antigravity/MainActivity.kt",
+            "app/src/main/java/com/opensource/antigravity/notifications/AntigravityKeepAliveService.kt",
+            "app/src/main/java/com/opensource/antigravity/notifications/NotificationHelper.kt",
+            "app/src/main/java/com/opensource/antigravity/webview/AntigravityJsBridge.kt",
+            "app/src/main/java/com/opensource/antigravity/webview/AntigravityWebView.kt",
+            "app/src/main/java/com/opensource/antigravity/webview/MobileBridgeScript.kt",
+            "app/src/main/java/com/opensource/antigravity/webview/WebViewHost.kt",
+            "app/src/main/res/drawable/ic_stat_antigravity.xml"
+          ],
+          "timestamp": "2026-11-22T01:42:11.481452600Z"
         }
       ]
     }

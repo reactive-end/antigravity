@@ -2,6 +2,7 @@ package com.opensource.antigravity.webview
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.Uri
 import android.os.Message
@@ -38,19 +39,27 @@ fun AntigravityWebView(
 ) {
     val context = LocalContext.current
     val webView = remember {
-        createConfiguredWebView(
-            context = context,
-            initialUrl = initialUrl,
-            jsBridge = jsBridge,
-            callbacks = callbacks,
-        )
+        WebViewHost.acquire(context) { hostContext ->
+            createConfiguredWebView(
+                context = hostContext,
+                initialUrl = initialUrl,
+                jsBridge = jsBridge,
+                callbacks = callbacks,
+            )
+        }.also { existing ->
+            existing.webViewClient = buildWebViewClient(callbacks)
+            existing.webChromeClient = buildWebChromeClient(context, callbacks)
+            if (existing.url != null) {
+                callbacks.onPageFirstPaint()
+            }
+        }
     }
 
     DisposableEffect(webView) {
         callbacks.onWebViewReady(webView)
         onDispose {
             SessionManager.flush()
-            webView.destroy()
+            WebViewHost.detachFromActivity(context.applicationContext)
         }
     }
 
@@ -78,7 +87,6 @@ private fun createConfiguredWebView(
         settings.apply {
             javaScriptEnabled = true
             domStorageEnabled = true
-            databaseEnabled = true
             cacheMode = WebSettings.LOAD_DEFAULT
             useWideViewPort = true
             loadWithOverviewMode = true
@@ -132,8 +140,18 @@ private fun buildWebViewClient(callbacks: WebViewCallbacks): WebViewClient =
             return true
         }
 
+        override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
+            super.onPageStarted(view, url, favicon)
+            if (AntigravityUrlPolicy.isAntigravityWorkspaceUrl(url)) {
+                view.evaluateJavascript(MobileBridgeScript.INJECT_SCRIPT, null)
+            }
+        }
+
         override fun onPageCommitVisible(view: WebView, url: String) {
             super.onPageCommitVisible(view, url)
+            if (AntigravityUrlPolicy.isAntigravityWorkspaceUrl(url)) {
+                view.evaluateJavascript(MobileBridgeScript.INJECT_SCRIPT, null)
+            }
             callbacks.onPageFirstPaint()
         }
 
