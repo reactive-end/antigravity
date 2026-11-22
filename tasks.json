@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "task_count": 4,
-  "updated_at": "2026-11-22T01:42:11.481452600Z",
+  "task_count": 5,
+  "updated_at": "2026-11-22T01:53:06.793243700Z",
   "tasks": [
     {
       "task_id": "T-20261122-01M80BH9P51EZEAG",
@@ -204,6 +204,73 @@
             "app/src/main/res/drawable/ic_stat_antigravity.xml"
           ],
           "timestamp": "2026-11-22T01:42:11.481452600Z"
+        }
+      ]
+    },
+    {
+      "task_id": "T-20261122-01M80FA0H4YT9MXZ",
+      "request": "Eliminar notificacion fija, detectar respuestas en segundo plano via DOM/V8 tick y optimizar APK release (20MB a 349KB)",
+      "status": "done",
+      "created_by": "reactive-end",
+      "contributors": [
+        "reactive-end"
+      ],
+      "branches": [
+        "main"
+      ],
+      "files_touched": [
+        "app/build.gradle.kts",
+        "app/proguard-rules.pro",
+        "app/src/main/AndroidManifest.xml",
+        "app/src/main/java/com/opensource/antigravity/MainActivity.kt",
+        "app/src/main/java/com/opensource/antigravity/data/SessionStore.kt",
+        "app/src/main/java/com/opensource/antigravity/notifications/AntigravityKeepAliveService.kt",
+        "app/src/main/java/com/opensource/antigravity/notifications/NotificationHelper.kt",
+        "app/src/main/java/com/opensource/antigravity/ui/components/ErrorStateView.kt",
+        "app/src/main/java/com/opensource/antigravity/ui/components/SplashOverlay.kt",
+        "app/src/main/java/com/opensource/antigravity/ui/theme/AntigravityTheme.kt",
+        "app/src/main/java/com/opensource/antigravity/webview/AntigravityWebView.kt",
+        "app/src/main/java/com/opensource/antigravity/webview/MobileBridgeScript.kt",
+        "app/src/main/java/com/opensource/antigravity/webview/WebViewHost.kt"
+      ],
+      "summary": "Reemplazado wrapper Compose por FrameLayout nativo + AlwaysActiveWebView (onWindowVisibilityChanged VISIBLE), eliminado AntigravityKeepAliveService, anadido detector de respuestas en segundo plano (__AGY_BG_TICK) y compilado APK release R8 de 349 KB",
+      "entry_count": 2,
+      "created_at": "2026-11-22T01:53:06.596738400Z",
+      "updated_at": "2026-11-22T01:53:06.793243700Z",
+      "entries": [
+        {
+          "entry_id": "01M80FA0H6Z6GBQV7P44W5K9RC",
+          "task_id": "T-20261122-01M80FA0H4YT9MXZ",
+          "author": "reactive-end",
+          "status": "in_progress",
+          "branch": "main",
+          "summary": "Started task: Eliminar notificacion fija, detectar respuestas en segundo plano via DOM/V8 tick y optimizar APK release (20MB a 349KB)",
+          "files_touched": [],
+          "timestamp": "2026-11-22T01:53:06.632872400Z"
+        },
+        {
+          "entry_id": "01M80FA0P8CHDVBJVJKCA2HVR6",
+          "task_id": "T-20261122-01M80FA0H4YT9MXZ",
+          "author": "reactive-end",
+          "status": "done",
+          "branch": "main",
+          "summary": "Reemplazado wrapper Compose por FrameLayout nativo + AlwaysActiveWebView (onWindowVisibilityChanged VISIBLE), eliminado AntigravityKeepAliveService, anadido detector de respuestas en segundo plano (__AGY_BG_TICK) y compilado APK release R8 de 349 KB",
+          "files_touched": [
+            "app/build.gradle.kts",
+            "app/proguard-rules.pro",
+            "app/src/main/AndroidManifest.xml",
+            "app/src/main/java/com/opensource/antigravity/MainActivity.kt",
+            "app/src/main/java/com/opensource/antigravity/data/SessionStore.kt",
+            "app/src/main/java/com/opensource/antigravity/notifications/AntigravityKeepAliveService.kt",
+            "app/src/main/java/com/opensource/antigravity/notifications/NotificationHelper.kt",
+            "app/src/main/java/com/opensource/antigravity/ui/components/ErrorStateView.kt",
+            "app/src/main/java/com/opensource/antigravity/ui/components/SplashOverlay.kt",
+            "app/src/main/java/com/opensource/antigravity/ui/theme/AntigravityTheme.kt",
+            "app/src/main/java/com/opensource/antigravity/webview/AntigravityWebView.kt",
+            "app/src/main/java/com/opensource/antigravity/webview/MobileBridgeScript.kt",
+            "app/src/main/java/com/opensource/antigravity/webview/WebViewHost.kt"
+          ],
+          "timestamp": "2026-11-22T01:53:06.793243700Z"
         }
       ]
     }

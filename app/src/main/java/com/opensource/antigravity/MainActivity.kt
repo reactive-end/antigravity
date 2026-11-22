@@ -1,50 +1,41 @@
 package com.opensource.antigravity
 
 import android.Manifest
+import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.util.TypedValue
+import android.view.Gravity
+import android.view.View
+import android.view.ViewGroup
 import android.webkit.ValueCallback
-import android.webkit.WebView
+import android.widget.Button
+import android.widget.FrameLayout
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.ProgressBar
+import android.widget.TextView
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.SystemBarStyle
-import androidx.activity.compose.BackHandler
-import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import com.opensource.antigravity.data.NetworkMonitor
 import com.opensource.antigravity.data.SessionStore
-import com.opensource.antigravity.notifications.AntigravityKeepAliveService
 import com.opensource.antigravity.notifications.NotificationHelper
-import com.opensource.antigravity.ui.components.CosmicProgressBar
-import com.opensource.antigravity.ui.components.ErrorStateView
-import com.opensource.antigravity.ui.components.SplashOverlay
-import com.opensource.antigravity.ui.theme.AntigravityColors
-import com.opensource.antigravity.ui.theme.AntigravityTheme
+import com.opensource.antigravity.webview.AlwaysActiveWebView
 import com.opensource.antigravity.webview.AntigravityJsBridge
-import com.opensource.antigravity.webview.AntigravityUrlPolicy
-import com.opensource.antigravity.webview.AntigravityWebView
+import com.opensource.antigravity.webview.AntigravityWebViewFactory
 import com.opensource.antigravity.webview.SessionManager
 import com.opensource.antigravity.webview.WebViewCallbacks
 import com.opensource.antigravity.webview.WebViewHost
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -54,7 +45,23 @@ class MainActivity : ComponentActivity() {
     private lateinit var notificationHelper: NotificationHelper
     private lateinit var jsBridge: AntigravityJsBridge
 
+    private var webView: AlwaysActiveWebView? = null
+    private lateinit var progressBar: ProgressBar
+    private lateinit var splashContainer: View
+    private lateinit var errorContainer: LinearLayout
+    private lateinit var errorTextView: TextView
+
     private var pendingFileCallback: ValueCallback<Array<Uri>>? = null
+    private var hasError = false
+
+    private val backCallback = object : OnBackPressedCallback(false) {
+        override fun handleOnBackPressed() {
+            val view = webView
+            if (view != null && view.canGoBack()) {
+                view.goBack()
+            }
+        }
+    }
 
     private val fileChooserLauncher = registerForActivityResult(
         ActivityResultContracts.OpenMultipleDocuments(),
@@ -65,13 +72,13 @@ class MainActivity : ComponentActivity() {
 
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
-    ) { /* Permission state checked dynamically when posting notifications */ }
+    ) { /* Checked dynamically when posting notifications */ }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
-            navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
         )
 
         sessionStore = SessionStore(applicationContext)
@@ -79,39 +86,18 @@ class MainActivity : ComponentActivity() {
         notificationHelper = NotificationHelper(applicationContext).apply { ensureChannels() }
         jsBridge = AntigravityJsBridge(notificationHelper)
 
+        onBackPressedDispatcher.addCallback(this, backCallback)
         requestNotificationPermissionIfNeeded()
-        AntigravityKeepAliveService.start(applicationContext)
 
-        setContent {
-            val isOnline by networkMonitor.isOnline.collectAsState(
-                initial = networkMonitor.isCurrentlyOnline(),
-            )
-            var initialUrl by remember { mutableStateOf<String?>(null) }
+        val root = buildNativeHierarchy()
+        setContentView(root)
 
-            LaunchedEffect(Unit) {
-                initialUrl = sessionStore.getLastVisitedUrl()
-            }
-
-            AntigravityTheme {
-                AntigravityRemoteRoot(
-                    initialUrl = initialUrl,
-                    isOnline = isOnline,
-                    sessionStore = sessionStore,
-                    jsBridge = jsBridge,
-                    onLaunchFileChooser = { callback ->
-                        pendingFileCallback?.onReceiveValue(emptyArray())
-                        pendingFileCallback = callback
-                        fileChooserLauncher.launch(arrayOf("*/*"))
-                    },
-                )
-            }
-        }
+        observeNetworkRecovery()
     }
 
     override fun onStart() {
         super.onStart()
-        WebViewHost.isInBackground = false
-        WebViewHost.keepAliveTick()
+        WebViewHost.setBackgroundState(false)
     }
 
     override fun onPause() {
@@ -121,9 +107,184 @@ class MainActivity : ComponentActivity() {
 
     override fun onStop() {
         super.onStop()
-        WebViewHost.isInBackground = true
         SessionManager.flush()
-        WebViewHost.keepAliveTick()
+        WebViewHost.setBackgroundState(true)
+    }
+
+    override fun onDestroy() {
+        WebViewHost.detachFromActivity(applicationContext)
+        webView = null
+        super.onDestroy()
+    }
+
+    private fun buildNativeHierarchy(): FrameLayout {
+        val root = FrameLayout(this).apply {
+            setBackgroundColor(Color.BLACK)
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+            )
+        }
+
+        ViewCompat.setOnApplyWindowInsetsListener(root) { v, insets ->
+            val bars = insets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.ime(),
+            )
+            v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
+
+        progressBar = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
+            max = 100
+            visibility = View.GONE
+            layoutParams = FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dp(2),
+                Gravity.TOP,
+            )
+        }
+
+        splashContainer = buildSplashOverlay()
+        errorContainer = buildErrorOverlay()
+
+        val acquiredWebView = AntigravityWebViewFactory.acquireOrCreate(
+            activityContext = this,
+            initialUrl = sessionStore.getLastVisitedUrl(),
+            jsBridge = jsBridge,
+            callbacks = WebViewCallbacks(
+                onProgressChanged = { p ->
+                    if (p in 1..99) {
+                        progressBar.visibility = View.VISIBLE
+                        progressBar.progress = p
+                    } else {
+                        progressBar.visibility = View.GONE
+                    }
+                },
+                onNavigationStateChanged = { url, canGoBack ->
+                    backCallback.isEnabled = canGoBack
+                    sessionStore.saveLastVisitedUrl(url)
+                },
+                onPageFirstPaint = {
+                    hasError = false
+                    errorContainer.visibility = View.GONE
+                    hideSplashFast()
+                },
+                onMainFrameError = { desc ->
+                    hasError = true
+                    hideSplashFast()
+                    errorTextView.text = desc
+                    errorContainer.visibility = View.VISIBLE
+                },
+                onFileChooser = { callback ->
+                    pendingFileCallback?.onReceiveValue(emptyArray())
+                    pendingFileCallback = callback
+                    fileChooserLauncher.launch(arrayOf("*/*"))
+                },
+            ),
+        )
+        webView = acquiredWebView
+
+        root.addView(acquiredWebView)
+        root.addView(progressBar)
+        root.addView(errorContainer)
+        root.addView(splashContainer)
+
+        root.postDelayed({ hideSplashFast() }, 1_800L)
+        return root
+    }
+
+    private fun buildSplashOverlay(): LinearLayout {
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setBackgroundColor(Color.BLACK)
+            layoutParams = FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+            )
+
+            val logo = ImageView(context).apply {
+                setImageResource(R.drawable.antigravity_logo_official)
+                layoutParams = LinearLayout.LayoutParams(dp(80), dp(80))
+            }
+            val title = TextView(context).apply {
+                text = "Antigravity"
+                setTextColor(Color.parseColor("#F3F4F6"))
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f)
+                typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+                setPadding(0, dp(16), 0, 0)
+            }
+            addView(logo)
+            addView(title)
+        }
+    }
+
+    private fun buildErrorOverlay(): LinearLayout {
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            visibility = View.GONE
+            setBackgroundColor(Color.BLACK)
+            setPadding(dp(32), dp(32), dp(32), dp(32))
+            layoutParams = FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+            )
+
+            val title = TextView(context).apply {
+                text = "Conexión interrumpida"
+                setTextColor(Color.parseColor("#F3F4F6"))
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
+                typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+                gravity = Gravity.CENTER
+            }
+            errorTextView = TextView(context).apply {
+                text = "No se pudo conectar con Antigravity Remote."
+                setTextColor(Color.parseColor("#9CA3AF"))
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+                gravity = Gravity.CENTER
+                setPadding(0, dp(8), 0, dp(24))
+            }
+            val retryBtn = Button(context).apply {
+                text = "Reintentar"
+                isAllCaps = false
+                setTextColor(Color.WHITE)
+                background = GradientDrawable().apply {
+                    setColor(Color.parseColor("#4C8BF5"))
+                    cornerRadius = dp(20).toFloat()
+                }
+                setPadding(dp(28), dp(10), dp(28), dp(10))
+                setOnClickListener {
+                    hasError = false
+                    visibility = View.GONE
+                    webView?.reload()
+                }
+            }
+            addView(title)
+            addView(errorTextView)
+            addView(retryBtn)
+        }
+    }
+
+    private fun hideSplashFast() {
+        if (splashContainer.visibility == View.GONE) return
+        splashContainer.animate()
+            .alpha(0f)
+            .setDuration(180L)
+            .withEndAction { splashContainer.visibility = View.GONE }
+            .start()
+    }
+
+    private fun observeNetworkRecovery() {
+        lifecycleScope.launch {
+            networkMonitor.isOnline.collectLatest { online ->
+                if (online && hasError) {
+                    hasError = false
+                    errorContainer.visibility = View.GONE
+                    webView?.reload()
+                }
+            }
+        }
     }
 
     private fun requestNotificationPermissionIfNeeded() {
@@ -133,89 +294,7 @@ class MainActivity : ComponentActivity() {
             notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
-}
 
-@Composable
-private fun AntigravityRemoteRoot(
-    initialUrl: String?,
-    isOnline: Boolean,
-    sessionStore: SessionStore,
-    jsBridge: AntigravityJsBridge,
-    onLaunchFileChooser: (ValueCallback<Array<Uri>>) -> Unit,
-) {
-    val scope = rememberCoroutineScope()
-    var webViewRef by remember { mutableStateOf<WebView?>(null) }
-    var progress by remember { mutableIntStateOf(0) }
-    var showSplash by remember { mutableStateOf(true) }
-    var canGoBack by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-
-    LaunchedEffect(Unit) {
-        delay(2_400L)
-        showSplash = false
-    }
-
-    LaunchedEffect(isOnline) {
-        if (isOnline && errorMessage != null) {
-            errorMessage = null
-            webViewRef?.reload()
-        }
-    }
-
-    BackHandler(enabled = canGoBack) {
-        webViewRef?.goBack()
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AntigravityColors.Canvas)
-            .statusBarsPadding()
-            .navigationBarsPadding()
-            .imePadding(),
-    ) {
-        if (initialUrl != null) {
-            AntigravityWebView(
-                initialUrl = initialUrl,
-                jsBridge = jsBridge,
-                callbacks = WebViewCallbacks(
-                    onWebViewReady = { webViewRef = it },
-                    onProgressChanged = { progress = it },
-                    onNavigationStateChanged = { url, back ->
-                        canGoBack = back
-                        if (AntigravityUrlPolicy.isAntigravityWorkspaceUrl(url)) {
-                            scope.launch { sessionStore.saveLastVisitedUrl(url) }
-                        }
-                    },
-                    onPageFirstPaint = {
-                        errorMessage = null
-                        showSplash = false
-                    },
-                    onMainFrameError = { desc ->
-                        showSplash = false
-                        errorMessage = desc
-                    },
-                    onFileChooser = onLaunchFileChooser,
-                ),
-                modifier = Modifier.fillMaxSize(),
-            )
-        }
-
-        CosmicProgressBar(
-            progress = progress,
-            modifier = Modifier.align(Alignment.TopCenter),
-        )
-
-        errorMessage?.let { msg ->
-            ErrorStateView(
-                message = msg,
-                onRetry = {
-                    errorMessage = null
-                    webViewRef?.reload()
-                },
-            )
-        }
-
-        SplashOverlay(visible = showSplash)
-    }
+    private fun dp(value: Int): Int =
+        (value * resources.displayMetrics.density).toInt()
 }

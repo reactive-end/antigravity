@@ -1,7 +1,6 @@
 package com.opensource.antigravity.notifications
 
 import android.Manifest
-import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -23,6 +22,12 @@ class NotificationHelper(private val context: Context) {
     fun ensureChannels() {
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
+        // Clean up any legacy persistent background notification/channel from previous builds.
+        runCatching {
+            manager.cancel(LEGACY_KEEPALIVE_NOTIFICATION_ID)
+            manager.deleteNotificationChannel(LEGACY_KEEPALIVE_CHANNEL_ID)
+        }
+
         val alertsChannel = NotificationChannel(
             CHANNEL_ALERTS_ID,
             CHANNEL_ALERTS_NAME,
@@ -31,20 +36,7 @@ class NotificationHelper(private val context: Context) {
             description = "Avisos cuando una tarea de Antigravity termina o requiere atención"
             enableVibration(true)
         }
-
-        val syncChannel = NotificationChannel(
-            CHANNEL_KEEPALIVE_ID,
-            CHANNEL_KEEPALIVE_NAME,
-            NotificationManager.IMPORTANCE_MIN,
-        ).apply {
-            description = "Mantiene activa la conexión remota en segundo plano para recibir avisos"
-            setShowBadge(false)
-            setSound(null, null)
-            enableVibration(false)
-        }
-
         manager.createNotificationChannel(alertsChannel)
-        manager.createNotificationChannel(syncChannel)
     }
 
     fun hasNotificationPermission(): Boolean {
@@ -55,26 +47,22 @@ class NotificationHelper(private val context: Context) {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
-    fun buildKeepAliveNotification(): Notification {
-        ensureChannels()
-        return NotificationCompat.Builder(context, CHANNEL_KEEPALIVE_ID)
-            .setSmallIcon(R.drawable.ic_stat_antigravity)
-            .setContentTitle("Antigravity conectado")
-            .setContentText("Escuchando notificaciones remotas en segundo plano")
-            .setOngoing(true)
-            .setSilent(true)
-            .setPriority(NotificationCompat.PRIORITY_MIN)
-            .setCategory(NotificationCompat.CATEGORY_SERVICE)
-            .setContentIntent(createLaunchPendingIntent())
-            .build()
-    }
-
     fun postNativeNotification(title: String, body: String) {
         if (!hasNotificationPermission()) return
         ensureChannels()
 
         val cleanTitle = title.trim().ifEmpty { "Antigravity" }
-        val cleanBody = body.trim().ifEmpty { "Una tarea terminó o requiere tu atención." }
+        val cleanBody = body.trim().ifEmpty { "El agente terminó de responder." }
+
+        val launchIntent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            0,
+            launchIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ALERTS_ID)
             .setSmallIcon(R.drawable.ic_stat_antigravity)
@@ -85,7 +73,7 @@ class NotificationHelper(private val context: Context) {
             .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
             .setAutoCancel(true)
-            .setContentIntent(createLaunchPendingIntent())
+            .setContentIntent(pendingIntent)
             .build()
 
         runCatching {
@@ -93,23 +81,10 @@ class NotificationHelper(private val context: Context) {
         }
     }
 
-    private fun createLaunchPendingIntent(): PendingIntent {
-        val launchIntent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
-        }
-        return PendingIntent.getActivity(
-            context,
-            0,
-            launchIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-        )
-    }
-
     companion object {
         const val CHANNEL_ALERTS_ID = "antigravity_remote_alerts"
         const val CHANNEL_ALERTS_NAME = "Antigravity Remote"
-        const val CHANNEL_KEEPALIVE_ID = "antigravity_background_sync"
-        const val CHANNEL_KEEPALIVE_NAME = "Conexión en segundo plano"
-        const val KEEPALIVE_NOTIFICATION_ID = 1001
+        private const val LEGACY_KEEPALIVE_CHANNEL_ID = "antigravity_background_sync"
+        private const val LEGACY_KEEPALIVE_NOTIFICATION_ID = 1001
     }
 }

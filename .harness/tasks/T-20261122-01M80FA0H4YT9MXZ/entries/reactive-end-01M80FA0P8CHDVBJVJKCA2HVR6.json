@@ -1,0 +1,24 @@
+{
+  "entry_id": "01M80FA0P8CHDVBJVJKCA2HVR6",
+  "task_id": "T-20261122-01M80FA0H4YT9MXZ",
+  "author": "reactive-end",
+  "status": "done",
+  "branch": "main",
+  "summary": "Reemplazado wrapper Compose por FrameLayout nativo + AlwaysActiveWebView (onWindowVisibilityChanged VISIBLE), eliminado AntigravityKeepAliveService, anadido detector de respuestas en segundo plano (__AGY_BG_TICK) y compilado APK release R8 de 349 KB",
+  "files_touched": [
+    "app/build.gradle.kts",
+    "app/proguard-rules.pro",
+    "app/src/main/AndroidManifest.xml",
+    "app/src/main/java/com/opensource/antigravity/MainActivity.kt",
+    "app/src/main/java/com/opensource/antigravity/data/SessionStore.kt",
+    "app/src/main/java/com/opensource/antigravity/notifications/AntigravityKeepAliveService.kt",
+    "app/src/main/java/com/opensource/antigravity/notifications/NotificationHelper.kt",
+    "app/src/main/java/com/opensource/antigravity/ui/components/ErrorStateView.kt",
+    "app/src/main/java/com/opensource/antigravity/ui/components/SplashOverlay.kt",
+    "app/src/main/java/com/opensource/antigravity/ui/theme/AntigravityTheme.kt",
+    "app/src/main/java/com/opensource/antigravity/webview/AntigravityWebView.kt",
+    "app/src/main/java/com/opensource/antigravity/webview/MobileBridgeScript.kt",
+    "app/src/main/java/com/opensource/antigravity/webview/WebViewHost.kt"
+  ],
+  "timestamp": "2026-11-22T01:53:06.793243700Z"
+}

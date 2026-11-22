@@ -1,4 +1,4 @@
--keepattributes *Annotation*
--keepclassmembers class com.opensource.antigravity.webview.AntigravityJsBridge {
+-keepclassmembers class * {
     @android.webkit.JavascriptInterface <methods>;
 }
+-keep class com.opensource.antigravity.webview.AntigravityJsBridge { *; }

@@ -1,31 +1,28 @@
 package com.opensource.antigravity.data
 
 import android.content.Context
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
 import com.opensource.antigravity.webview.AntigravityUrlPolicy
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 
-private val Context.sessionDataStore: DataStore<Preferences> by preferencesDataStore(
-    name = "antigravity_session",
-)
+class SessionStore(context: Context) {
 
-class SessionStore(private val context: Context) {
+    private val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
-    private val lastUrlKey = stringPreferencesKey("last_visited_url")
-
-    suspend fun getLastVisitedUrl(): String {
-        val saved = context.sessionDataStore.data.map { it[lastUrlKey] }.first()
-        return saved?.takeIf { AntigravityUrlPolicy.isAntigravityWorkspaceUrl(it) }
-            ?: AntigravityUrlPolicy.REMOTE_HOME_URL
+    fun getLastVisitedUrl(): String {
+        val saved = prefs.getString(KEY_LAST_URL, null)?.trim().orEmpty()
+        return if (AntigravityUrlPolicy.isAntigravityWorkspaceUrl(saved)) {
+            saved
+        } else {
+            AntigravityUrlPolicy.REMOTE_HOME_URL
+        }
     }
 
-    suspend fun saveLastVisitedUrl(url: String) {
+    fun saveLastVisitedUrl(url: String) {
         if (!AntigravityUrlPolicy.isAntigravityWorkspaceUrl(url)) return
-        context.sessionDataStore.edit { it[lastUrlKey] = url }
+        prefs.edit().putString(KEY_LAST_URL, url).apply()
+    }
+
+    companion object {
+        private const val PREFS_NAME = "antigravity_session"
+        private const val KEY_LAST_URL = "last_visited_url"
     }
 }
