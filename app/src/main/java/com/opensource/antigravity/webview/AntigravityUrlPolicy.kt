@@ -1,27 +1,36 @@
 package com.opensource.antigravity.webview
 
 import java.net.URI
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 
 object AntigravityUrlPolicy {
 
     const val REMOTE_HOME_URL = "https://antigravity.google.com/remote"
 
-    private val inAppHosts = setOf(
-        "antigravity.google.com",
+    // Covers google.com, accounts.google.com, accounts.google.co.ve, www.google.com.co,
+    // accounts.google.es, antigravity.google.com, myaccount.google.com, etc.
+    private val googleRegionalHostRegex = Regex("^([a-z0-9-]+\\.)*google(\\.[a-z]{2,3}){1,2}$")
+
+    private val inAppExactHosts = setOf(
         "antigravity.google",
-        "accounts.google.com",
-        "accounts.youtube.com",
-        "myaccount.google.com",
-        "gds.google.com",
-        "signin.google.com",
-        "oauth2.googleapis.com",
-        "consent.google.com",
+        "google.com",
+        "googleapis.com",
+        "gstatic.com",
+        "googleusercontent.com",
+        "youtube.com",
+        "withgoogle.com",
     )
 
     private val inAppSuffixes = listOf(
-        ".antigravity.google.com",
-        ".antigravity.google",
-        ".accounts.google.com",
+        ".google",
+        ".googleapis.com",
+        ".gstatic.com",
+        ".googleusercontent.com",
+        ".youtube.com",
+        ".gvt1.com",
+        ".gvt2.com",
+        ".withgoogle.com",
     )
 
     fun shouldLoadInApp(rawUrl: String): Boolean {
@@ -29,8 +38,22 @@ object AntigravityUrlPolicy {
         val scheme = uri.scheme?.lowercase() ?: return false
         if (scheme != "https" && scheme != "http") return false
         val host = uri.host?.lowercase() ?: return false
-        if (host in inAppHosts) return true
+        if (host in inAppExactHosts) return true
+        if (googleRegionalHostRegex.matches(host)) return true
         return inAppSuffixes.any { host.endsWith(it) }
+    }
+
+    fun isHttpOrHttps(rawUrl: String): Boolean {
+        val scheme = runCatching { URI(rawUrl.trim()).scheme?.lowercase() }.getOrNull()
+        return scheme == "https" || scheme == "http"
+    }
+
+    fun extractIntentFallbackUrl(rawUrl: String): String? {
+        if (!rawUrl.startsWith("intent://", ignoreCase = true)) return null
+        val match = Regex("S\\.browser_fallback_url=([^;]+)").find(rawUrl) ?: return null
+        return runCatching {
+            URLDecoder.decode(match.groupValues[1], StandardCharsets.UTF_8.name())
+        }.getOrNull()?.takeIf { isHttpOrHttps(it) }
     }
 
     fun isAntigravityWorkspaceUrl(rawUrl: String): Boolean {

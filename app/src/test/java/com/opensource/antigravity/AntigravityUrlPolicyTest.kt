@@ -1,6 +1,7 @@
 package com.opensource.antigravity
 
 import com.opensource.antigravity.webview.AntigravityUrlPolicy
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -8,10 +9,26 @@ import org.junit.Test
 class AntigravityUrlPolicyTest {
 
     @Test
-    fun remoteAndGoogleAuthHostsStayInApp() {
+    fun remoteAndAllRegionalGoogleAuthHostsStayInApp() {
         assertTrue(AntigravityUrlPolicy.shouldLoadInApp("https://antigravity.google.com/remote"))
         assertTrue(AntigravityUrlPolicy.shouldLoadInApp("https://accounts.google.com/v3/signin"))
+        assertTrue(AntigravityUrlPolicy.shouldLoadInApp("https://accounts.google.co.ve/CheckCookie?continue=https%3A%2F%2Fantigravity.google.com%2Fremote"))
+        assertTrue(AntigravityUrlPolicy.shouldLoadInApp("https://www.google.co.ve/accounts/SetOSID"))
+        assertTrue(AntigravityUrlPolicy.shouldLoadInApp("https://accounts.google.com.co/v3/signin/challenge"))
+        assertTrue(AntigravityUrlPolicy.shouldLoadInApp("https://accounts.google.es/CheckCookie"))
+        assertTrue(AntigravityUrlPolicy.shouldLoadInApp("https://www.google.com/accounts/ServiceLogin"))
         assertTrue(AntigravityUrlPolicy.shouldLoadInApp("https://myaccount.google.com/security"))
+        assertTrue(AntigravityUrlPolicy.shouldLoadInApp("https://antigravity-pa.googleapis.com/v1/session"))
+    }
+
+    @Test
+    fun intentFallbackUrlIsExtractedForInAppLoad() {
+        val intentUrl = "intent://accounts.google.com/CheckCookie#Intent;scheme=https;" +
+            "S.browser_fallback_url=https%3A%2F%2Faccounts.google.co.ve%2FCheckCookie%3Fhl%3Des;end"
+        assertEquals(
+            "https://accounts.google.co.ve/CheckCookie?hl=es",
+            AntigravityUrlPolicy.extractIntentFallbackUrl(intentUrl),
+        )
     }
 
     @Test

@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "task_count": 2,
-  "updated_at": "2026-11-22T00:59:08.094909500Z",
+  "task_count": 3,
+  "updated_at": "2026-11-22T01:16:40.560202500Z",
   "tasks": [
     {
       "task_id": "T-20261122-01M80BH9P51EZEAG",
@@ -90,6 +90,61 @@
           "summary": "Eliminados FloatingControlDock, SettingsSheet y AppPreferences; tema oscuro unico fiel a Antigravity 2.0, scroll nativo automatico, APK recompilado y verificado en emulador sin errores",
           "files_touched": [],
           "timestamp": "2026-11-22T00:59:08.094909500Z"
+        }
+      ]
+    },
+    {
+      "task_id": "T-20261122-01M80D79HYYTVYD2",
+      "request": "Corregir redireccion 2FA de Google al navegador nativo y usar logo oficial de Antigravity",
+      "status": "done",
+      "created_by": "reactive-end",
+      "contributors": [
+        "reactive-end"
+      ],
+      "branches": [
+        "main"
+      ],
+      "files_touched": [
+        "app/src/main/java/com/opensource/antigravity/ui/components/SplashOverlay.kt",
+        "app/src/main/java/com/opensource/antigravity/webview/AntigravityUrlPolicy.kt",
+        "app/src/main/java/com/opensource/antigravity/webview/AntigravityWebView.kt",
+        "app/src/main/res/drawable-nodpi/",
+        "app/src/main/res/drawable/ic_launcher_background.xml",
+        "app/src/main/res/drawable/ic_launcher_foreground.xml",
+        "app/src/test/java/com/opensource/antigravity/AntigravityUrlPolicyTest.kt"
+      ],
+      "summary": "Autorizados dominios regionales Google (*.google.co.ve, etc.), fallback intent:// y redirecciones automaticas dentro del WebView; reemplazado icono/splash por el PNG oficial de Antigravity",
+      "entry_count": 2,
+      "created_at": "2026-11-22T01:16:40.382293900Z",
+      "updated_at": "2026-11-22T01:16:40.560202500Z",
+      "entries": [
+        {
+          "entry_id": "01M80D79HZQCAW4DD450PV2HT9",
+          "task_id": "T-20261122-01M80D79HYYTVYD2",
+          "author": "reactive-end",
+          "status": "in_progress",
+          "branch": "main",
+          "summary": "Started task: Corregir redireccion 2FA de Google al navegador nativo y usar logo oficial de Antigravity",
+          "files_touched": [],
+          "timestamp": "2026-11-22T01:16:40.417747400Z"
+        },
+        {
+          "entry_id": "01M80D79PC8RVGPWEED805AD4P",
+          "task_id": "T-20261122-01M80D79HYYTVYD2",
+          "author": "reactive-end",
+          "status": "done",
+          "branch": "main",
+          "summary": "Autorizados dominios regionales Google (*.google.co.ve, etc.), fallback intent:// y redirecciones automaticas dentro del WebView; reemplazado icono/splash por el PNG oficial de Antigravity",
+          "files_touched": [
+            "app/src/main/java/com/opensource/antigravity/ui/components/SplashOverlay.kt",
+            "app/src/main/java/com/opensource/antigravity/webview/AntigravityUrlPolicy.kt",
+            "app/src/main/java/com/opensource/antigravity/webview/AntigravityWebView.kt",
+            "app/src/main/res/drawable-nodpi/",
+            "app/src/main/res/drawable/ic_launcher_background.xml",
+            "app/src/main/res/drawable/ic_launcher_foreground.xml",
+            "app/src/test/java/com/opensource/antigravity/AntigravityUrlPolicyTest.kt"
+          ],
+          "timestamp": "2026-11-22T01:16:40.560202500Z"
         }
       ]
     }

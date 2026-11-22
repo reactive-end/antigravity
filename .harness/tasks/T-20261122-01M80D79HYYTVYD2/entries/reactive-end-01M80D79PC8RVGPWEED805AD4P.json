@@ -1,0 +1,18 @@
+{
+  "entry_id": "01M80D79PC8RVGPWEED805AD4P",
+  "task_id": "T-20261122-01M80D79HYYTVYD2",
+  "author": "reactive-end",
+  "status": "done",
+  "branch": "main",
+  "summary": "Autorizados dominios regionales Google (*.google.co.ve, etc.), fallback intent:// y redirecciones automaticas dentro del WebView; reemplazado icono/splash por el PNG oficial de Antigravity",
+  "files_touched": [
+    "app/src/main/java/com/opensource/antigravity/ui/components/SplashOverlay.kt",
+    "app/src/main/java/com/opensource/antigravity/webview/AntigravityUrlPolicy.kt",
+    "app/src/main/java/com/opensource/antigravity/webview/AntigravityWebView.kt",
+    "app/src/main/res/drawable-nodpi/",
+    "app/src/main/res/drawable/ic_launcher_background.xml",
+    "app/src/main/res/drawable/ic_launcher_foreground.xml",
+    "app/src/test/java/com/opensource/antigravity/AntigravityUrlPolicyTest.kt"
+  ],
+  "timestamp": "2026-11-22T01:16:40.560202500Z"
+}

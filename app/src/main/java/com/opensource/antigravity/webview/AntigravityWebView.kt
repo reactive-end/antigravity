@@ -109,7 +109,18 @@ private fun buildWebViewClient(callbacks: WebViewCallbacks): WebViewClient =
             request: WebResourceRequest,
         ): Boolean {
             val url = request.url.toString()
+            if (url.startsWith("intent://", ignoreCase = true)) {
+                val fallback = AntigravityUrlPolicy.extractIntentFallbackUrl(url)
+                if (fallback != null && (AntigravityUrlPolicy.shouldLoadInApp(fallback) || !request.hasGesture())) {
+                    view.loadUrl(fallback)
+                    return true
+                }
+            }
             if (AntigravityUrlPolicy.shouldLoadInApp(url)) {
+                return false
+            }
+            // Never kick automatic auth/2FA/SSO redirects out into the native browser.
+            if (!request.hasGesture() && AntigravityUrlPolicy.isHttpOrHttps(url)) {
                 return false
             }
             runCatching {
@@ -177,8 +188,14 @@ private fun buildWebChromeClient(
                     request: WebResourceRequest,
                 ): Boolean {
                     val targetUrl = request.url.toString()
-                    if (AntigravityUrlPolicy.shouldLoadInApp(targetUrl)) {
-                        view.loadUrl(targetUrl)
+                    if (targetUrl.isBlank() || targetUrl == "about:blank") {
+                        return false
+                    }
+                    val resolved = AntigravityUrlPolicy.extractIntentFallbackUrl(targetUrl) ?: targetUrl
+                    if (AntigravityUrlPolicy.shouldLoadInApp(resolved) ||
+                        (!request.hasGesture() && AntigravityUrlPolicy.isHttpOrHttps(resolved))
+                    ) {
+                        view.loadUrl(resolved)
                     } else {
                         runCatching {
                             context.startActivity(

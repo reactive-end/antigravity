@@ -11,7 +11,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleOut
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,11 +27,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.opensource.antigravity.R
 import com.opensource.antigravity.ui.theme.AntigravityColors
 
 @Composable
@@ -80,14 +80,14 @@ fun SplashOverlay(
         modifier = modifier,
     ) {
         val transition = rememberInfiniteTransition(label = "antigravity_splash")
-        val glowAlpha by transition.animateFloat(
-            initialValue = 0.16f,
-            targetValue = 0.34f,
+        val logoScale by transition.animateFloat(
+            initialValue = 0.96f,
+            targetValue = 1.03f,
             animationSpec = infiniteRepeatable(
                 animation = tween(durationMillis = 1400, easing = FastOutSlowInEasing),
                 repeatMode = RepeatMode.Reverse,
             ),
-            label = "glow_alpha",
+            label = "logo_scale",
         )
 
         Box(
@@ -100,7 +100,16 @@ fun SplashOverlay(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
-                AntigravityMark(glowAlpha = glowAlpha)
+                Image(
+                    painter = painterResource(id = R.drawable.antigravity_logo_official),
+                    contentDescription = "Antigravity",
+                    modifier = Modifier
+                        .size(84.dp)
+                        .graphicsLayer {
+                            scaleX = logoScale
+                            scaleY = logoScale
+                        },
+                )
                 Spacer(modifier = Modifier.height(18.dp))
                 Text(
                     text = "Antigravity",
@@ -109,51 +118,5 @@ fun SplashOverlay(
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun AntigravityMark(glowAlpha: Float) {
-    Canvas(modifier = Modifier.size(92.dp)) {
-        val w = size.width
-        val h = size.height
-        val center = Offset(w / 2f, h / 2f)
-
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(
-                    AntigravityColors.AccentBlue.copy(alpha = glowAlpha),
-                    Color.Transparent,
-                ),
-                center = center,
-                radius = w * 0.56f,
-            ),
-            radius = w * 0.56f,
-            center = center,
-        )
-
-        val arch = Path().apply {
-            moveTo(w * 0.50f, h * 0.16f)
-            cubicTo(w * 0.60f, h * 0.16f, w * 0.67f, h * 0.34f, w * 0.77f, h * 0.76f)
-            cubicTo(w * 0.79f, h * 0.84f, w * 0.72f, h * 0.87f, w * 0.67f, h * 0.80f)
-            cubicTo(w * 0.60f, h * 0.68f, w * 0.56f, h * 0.62f, w * 0.50f, h * 0.62f)
-            cubicTo(w * 0.44f, h * 0.62f, w * 0.40f, h * 0.68f, w * 0.33f, h * 0.80f)
-            cubicTo(w * 0.28f, h * 0.87f, w * 0.21f, h * 0.84f, w * 0.23f, h * 0.76f)
-            cubicTo(w * 0.33f, h * 0.34f, w * 0.40f, h * 0.16f, w * 0.50f, h * 0.16f)
-            close()
-        }
-
-        drawPath(
-            path = arch,
-            brush = Brush.verticalGradient(
-                colors = listOf(
-                    AntigravityColors.AccentCyan,
-                    AntigravityColors.AccentBlue,
-                    AntigravityColors.AccentViolet,
-                ),
-                startY = h * 0.16f,
-                endY = h * 0.86f,
-            ),
-        )
     }
 }
